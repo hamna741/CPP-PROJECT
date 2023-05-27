@@ -12,41 +12,72 @@ exchangeInfo::exchangeInfoClass::~exchangeInfoClass()
 }
 int exchangeInfo::exchangeInfoClass::readQueryFile()
 {
-
-    
-    //std::string currentContent((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
-    //inputFile.close();
-   // std::cout<<currentContent<<std::endl;
-   std::string prevQueryData;
-   while(true){
+    std::string prevQueryData;
     std::ifstream inputFile("/home/hamna/Desktop/myproject/CPP-PROJECT/src/queryfile.json");
+
     if (!inputFile.is_open())
     {
         std::cout << "Failed to open the file." << std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for 1 second before retrying
-        continue;
-        
+        return 1;
     }
-    std::string currentData((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+
+    inputFile.seekg(0, std::ios::end);
+    std::streampos fileSize = inputFile.tellg();
+    inputFile.seekg(0, std::ios::beg);
+
+    std::string currentData(fileSize, ' ');
+    inputFile.read(&currentData[0], fileSize);
+    inputFile.close();
+
+    while (true)
+    {
+        std::ifstream inputFile("/home/hamna/Desktop/myproject/CPP-PROJECT/src/queryfile.json");
+
+        if (!inputFile.is_open())
+        {
+            std::cout << "Failed to open the file." << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for 1 second before retrying
+            continue;
+        }
+
+        inputFile.seekg(0, std::ios::end);
+        fileSize = inputFile.tellg();
+        inputFile.seekg(0, std::ios::beg);
+
+        std::string newData(fileSize, ' ');
+        inputFile.read(&newData[0], fileSize);
         inputFile.close();
 
-        if (currentData != prevQueryData)
+        if (newData != prevQueryData)
         {
-            // Content of the query file has changed, process the new queries
-            queryCheck(currentData);
-            prevQueryData = currentData;
+            std::string appendedData = newData.substr(prevQueryData.length());
+           
+            queryCheck(appendedData);
+            prevQueryData = newData;
         }
 
         // Wait for 1 second before checking for updates again
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
+
+    return 0;
 }
 void exchangeInfo::exchangeInfoClass::queryCheck(std::string &queryContent){
-    rapidjson::Document docRead;
-    docRead.Parse(queryContent.c_str());
+     rapidjson::Document docRead;
+    if (queryContent.front() != '{' || queryContent.back() != '}') {
+        // Add missing brackets to create a valid JSON object
+        std::string wrappedContent = "{ \"query\": [ {" + queryContent;
+        docRead.Parse(wrappedContent.c_str());
+    } else {
+        docRead.Parse(queryContent.c_str());
+    }
+     
+   std::cout<<queryContent<<std::endl;
+   
+  //  docRead.Parse(queryContent.c_str());
  if (docRead.HasParseError())
     {
-        std::cout << "Failed to parse the JSON." << std::endl;
+        std::cout << "Failed to parse QUERY JSON." << std::endl;
       //  inputFile.close();
         //return 1;
     }
@@ -257,13 +288,15 @@ void exchangeInfo::exchangeInfoClass::getData(std::string instrumentName)
 
     rapidjson::Document queryDoc(rapidjson::kObjectType); // to store query result
     rapidjson::Document::AllocatorType &allocator = queryDoc.GetAllocator();
-     rapidjson::Value answers(rapidjson::kArrayType);
+    rapidjson::Value answers(rapidjson::kArrayType);
+    
 
     // rapidjson::Value dataObject(rapidjson::kObjectType); //to store extracted data
    
     if (exchangeInfoDoc.HasMember("symbols") && exchangeInfoDoc["symbols"].IsArray())
     {
         const rapidjson::Value &symbolsArray = exchangeInfoDoc["symbols"];
+         
         for (rapidjson::SizeType i = 0; i < symbolsArray.Size(); i++)
         {
             const rapidjson::Value &symbolObject = symbolsArray[i];
@@ -343,23 +376,25 @@ void exchangeInfo::exchangeInfoClass::getData(std::string instrumentName)
    // queryDoc.PushBack(answers,allocator);
   //  rapidjson::Value result(rapidjson::kObjectType);
    // queryDoc.AddMember("answers", answers.Move(), allocator);
- //  queryDoc.AddMember(rapidjson::Value("answers", allocator).Move(), answers.Move(), allocator);
-if (queryDoc.IsObject() && queryDoc.HasMember("answers"))
-    {
-        std::cout<<"HAS MMEBER ANSERS"<<std::endl;
-        rapidjson::Value &existingAnswers = queryDoc["answers"];
-        if (existingAnswers.IsArray())
-        {
-            for (rapidjson::SizeType i = 0; i < answers.Size(); i++)
-            {
-                existingAnswers.PushBack(answers[i], allocator);
-            }
-        }
-    }
-    else
-    {
-        queryDoc.AddMember("answers", answers.Move(), allocator);
-    }
+   queryDoc.AddMember(rapidjson::Value("answers", allocator).Move(), answers.Move(), allocator);
+//   if (answers.Size() > 0)
+//     {
+//         if (queryDoc.HasMember("answers"))
+//         {
+//             rapidjson::Value &existingAnswers = queryDoc["answers"];
+//             if (existingAnswers.IsArray())
+//             {
+//                 for (rapidjson::SizeType i = 0; i < answers.Size(); i++)
+//                 {
+//                     existingAnswers.PushBack(answers[i], allocator);
+//                 }
+//             }
+//         }
+//         else
+//         {
+//             queryDoc.AddMember("answers", answers.Move(), allocator);
+//         }
+//     }
 
     std::ofstream ansFile("answers.json", std::ios::app);
     if (!ansFile.is_open())
@@ -374,6 +409,7 @@ if (queryDoc.IsObject() && queryDoc.HasMember("answers"))
     ansFile.close();
 
     std::cout << "Data written to answers.json file." << std::endl;
+
 }
 
 void exchangeInfo::exchangeInfoClass::deleteData()
@@ -384,3 +420,4 @@ void exchangeInfo::exchangeInfoClass::updatetData()
 {
     std::cout << "QUERY TYPE IS UPDATE" << std::endl;
 }
+
