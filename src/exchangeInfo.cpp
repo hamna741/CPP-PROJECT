@@ -12,22 +12,43 @@ exchangeInfo::exchangeInfoClass::~exchangeInfoClass()
 }
 int exchangeInfo::exchangeInfoClass::readQueryFile()
 {
+
+    
+    //std::string currentContent((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+    //inputFile.close();
+   // std::cout<<currentContent<<std::endl;
+   std::string prevQueryData;
+   while(true){
     std::ifstream inputFile("/home/hamna/Desktop/myproject/CPP-PROJECT/src/queryfile.json");
     if (!inputFile.is_open())
     {
         std::cout << "Failed to open the file." << std::endl;
-        return 1;
+        std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for 1 second before retrying
+        continue;
+        
     }
-    rapidjson::IStreamWrapper streamWrapper(inputFile);
+    std::string currentData((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+        inputFile.close();
 
+        if (currentData != prevQueryData)
+        {
+            // Content of the query file has changed, process the new queries
+            queryCheck(currentData);
+            prevQueryData = currentData;
+        }
+
+        // Wait for 1 second before checking for updates again
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
+void exchangeInfo::exchangeInfoClass::queryCheck(std::string &queryContent){
     rapidjson::Document docRead;
-    docRead.ParseStream(streamWrapper);
-
-    if (docRead.HasParseError())
+    docRead.Parse(queryContent.c_str());
+ if (docRead.HasParseError())
     {
         std::cout << "Failed to parse the JSON." << std::endl;
-        inputFile.close();
-        return 1;
+      //  inputFile.close();
+        //return 1;
     }
 
     if (docRead.HasMember("query") && docRead["query"].IsArray())
@@ -116,13 +137,7 @@ int exchangeInfo::exchangeInfoClass::readQueryFile()
             std::cout << std::endl;
         }
     }
-
-    // Close the input file
-    inputFile.close();
-
-    return 0;
 }
-
 void exchangeInfo::exchangeInfoClass::getExchangeInfo()
 {
     web::http::client::http_client client(U("https://fapi.binance.com"));
@@ -218,6 +233,7 @@ void exchangeInfo::exchangeInfoClass::getExchangeInfo()
 void exchangeInfo::exchangeInfoClass::getData(std::string instrumentName)
 {
 
+    
     std::cout << "QUERY TYPE IS GET" << std::endl;
 
     std::ifstream exchangeInfoFile("/home/hamna/Desktop/myproject/CPP-PROJECT/src/exchangeInfo.json");
@@ -241,9 +257,10 @@ void exchangeInfo::exchangeInfoClass::getData(std::string instrumentName)
 
     rapidjson::Document queryDoc(rapidjson::kObjectType); // to store query result
     rapidjson::Document::AllocatorType &allocator = queryDoc.GetAllocator();
+     rapidjson::Value answers(rapidjson::kArrayType);
 
     // rapidjson::Value dataObject(rapidjson::kObjectType); //to store extracted data
-    rapidjson::Value answers(rapidjson::kArrayType);
+   
     if (exchangeInfoDoc.HasMember("symbols") && exchangeInfoDoc["symbols"].IsArray())
     {
         const rapidjson::Value &symbolsArray = exchangeInfoDoc["symbols"];
@@ -311,14 +328,38 @@ void exchangeInfo::exchangeInfoClass::getData(std::string instrumentName)
 
                     result.AddMember("symbol", rapidjson::Value(symbol.c_str(), allocator).Move(), allocator);
                     result.AddMember("data", dataObject.Move(), allocator);
+                   // queryDoc["answers"].PushBack(result,allocator);
                     answers.PushBack(result, allocator);
+                
                     break;
+
                 }
                 // }
             }
         }
     }
-    queryDoc.AddMember(rapidjson::Value("answers", allocator).Move(), answers.Move(), allocator);
+
+
+   // queryDoc.PushBack(answers,allocator);
+  //  rapidjson::Value result(rapidjson::kObjectType);
+   // queryDoc.AddMember("answers", answers.Move(), allocator);
+ //  queryDoc.AddMember(rapidjson::Value("answers", allocator).Move(), answers.Move(), allocator);
+if (queryDoc.IsObject() && queryDoc.HasMember("answers"))
+    {
+        std::cout<<"HAS MMEBER ANSERS"<<std::endl;
+        rapidjson::Value &existingAnswers = queryDoc["answers"];
+        if (existingAnswers.IsArray())
+        {
+            for (rapidjson::SizeType i = 0; i < answers.Size(); i++)
+            {
+                existingAnswers.PushBack(answers[i], allocator);
+            }
+        }
+    }
+    else
+    {
+        queryDoc.AddMember("answers", answers.Move(), allocator);
+    }
 
     std::ofstream ansFile("answers.json", std::ios::app);
     if (!ansFile.is_open())

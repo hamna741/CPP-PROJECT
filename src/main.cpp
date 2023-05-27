@@ -5,7 +5,7 @@
 int main()
 {  
      exchangeInfo::exchangeInfoClass info;
-     info.getExchangeInfo();
+   //  info.getExchangeInfo();
     info.readQueryFile();
    // info.getData();
 /////////////////////////////////////////////////////////////////////////////////////////RETRIEVING EXCHANGE INFO
