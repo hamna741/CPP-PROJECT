@@ -337,6 +337,7 @@ void ExchangeInfoClass::queryCheck(std::string &queryContent)
         }
     }
 }
+
 void ExchangeInfoClass::getData(const std::string& instrumentName)
 {
     std::cout << "QUERY TYPE IS GET" << std::endl;
