@@ -289,7 +289,7 @@ void ExchangeInfoClass::queryCheck(std::string &queryContent)
                 }
                 else if (queryType == "UPDATE")
                 {
-                    // ExchangeInfoClass::updatetData(queryObject);
+                     ExchangeInfoClass::updatetData(queryObject);
                 }
                 else
                 {
@@ -337,6 +337,7 @@ void ExchangeInfoClass::queryCheck(std::string &queryContent)
 void ExchangeInfoClass::getData(const std::string &instrumentName)
 {
     std::cout << "QUERY TYPE IS GET" << std::endl;
+
 
     if (symbolDataMap.find(instrumentName) != symbolDataMap.end())
     {
@@ -514,6 +515,122 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
     answerDoc.Accept(answersWriter);
 
     ansFileWrite.close();
+}
+
+void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
+{
+    if (queryObject.HasMember("id") && queryObject["id"].IsInt() && queryObject.HasMember("instrument_name") && queryObject["instrument_name"].IsString() && queryObject.HasMember("data") && queryObject["data"].IsObject())
+    {
+        int id = queryObject["id"].GetInt();
+        std::string instrumentName = queryObject["instrument_name"].GetString();
+        const rapidjson::Value &newData = queryObject["data"];
+
+
+        std::ifstream ansFile("answers.json");
+
+        if (!ansFile.is_open())
+        {
+           if (fileLog){
+            fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+        fileLogger->flush();
+        }
+
+        if (consoleLog){
+            consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+        }
+            exit(1);
+        }
+
+        rapidjson::Document answerDoc;
+        rapidjson::IStreamWrapper ansFileStreamWrapper(ansFile);
+        answerDoc.ParseStream(ansFileStreamWrapper);
+
+        ansFile.close();
+
+        if (answerDoc.HasParseError())
+        {
+           if (fileLog){
+            fileLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+        fileLogger->flush();
+        }
+
+        if (consoleLog){
+            consoleLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+        }
+            exit(1);
+        }
+
+        if (answerDoc.IsObject() && answerDoc.HasMember("answers"))
+        {
+            rapidjson::Value &answersArray = answerDoc["answers"];
+            rapidjson::SizeType index = 0;
+
+            while (index < answersArray.Size())
+            {
+                if (answersArray[index].IsObject())
+                {
+                    rapidjson::Value &answerObject = answersArray[index];
+
+                    if (answerObject.HasMember("ID") && answerObject["ID"].IsString() &&
+                        answerObject.HasMember("symbol") && answerObject["symbol"].IsString())
+                    {
+                        std::string ansID = answerObject["ID"].GetString();
+                        std::string ansSymbol = answerObject["symbol"].GetString();
+
+                        if (std::stoi(ansID) == id && ansSymbol == instrumentName)
+                        {
+
+                            rapidjson::Value newDataValue(newData, answerDoc.GetAllocator());
+                            answerObject.RemoveMember("data");
+                            answerObject.AddMember("data", newDataValue, answerDoc.GetAllocator());
+                        }
+                    }
+                }
+
+                index++;
+            }
+        }
+
+        std::ofstream ansFileWrite("answers.json");
+        if (!ansFileWrite.is_open())
+        {
+            if (fileLog){
+            fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+        fileLogger->flush();
+        }
+
+        if (consoleLog){
+            consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+        }
+            exit(1);
+        }
+
+        rapidjson::OStreamWrapper answersStreamWrapper(ansFileWrite);
+        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> answersWriter(answersStreamWrapper);
+        answerDoc.Accept(answersWriter);
+
+        ansFileWrite.close();
+
+       if (fileLog){
+            fileLogger->info("data updated in file");
+        fileLogger->flush();
+        }
+
+        if (consoleLog){
+            consoleLogger->info("data updated in file");
+        }
+    }
+    else
+    {
+        if (fileLog){
+            fileLogger->error("INVALID DATA");
+        fileLogger->flush();
+        }
+
+        if (consoleLog){
+            consoleLogger->error("INVALID DATA");
+        }
+    }
 }
 
 /*
