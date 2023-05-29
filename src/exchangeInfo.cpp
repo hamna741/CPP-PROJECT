@@ -64,16 +64,15 @@ void ExchangeInfoClass::getExchangeInfo()
     web::uri_builder builder(U("/fapi/v1/exchangeInfo"));
     client.request(web::http::methods::GET, builder.to_string())
         .then([](web::http::http_response response)
-        {
+              {
             if (response.status_code() == web::http::status_codes::OK) {
                 // Extract and process the response body
                 return response.extract_string();
             } else {
                 throw std::runtime_error("Request failed with status code: " + std::to_string(response.status_code()));
-            }
-        })
+            } })
         .then([this](std::string body)
-        {
+              {
             rapidjson::Document document;
             document.Parse(body.c_str());
 
@@ -142,11 +141,9 @@ void ExchangeInfoClass::getExchangeInfo()
                 if (consoleLog) {
                     consoleLogger->error("Failed to parse exchange info JSON");
                 }
-            }
-        })
+            } })
         .wait();
 }
-
 
 void ExchangeInfoClass::readQueryFile()
 {
@@ -156,7 +153,7 @@ void ExchangeInfoClass::readQueryFile()
     if (!inputFile.is_open())
     {
         std::cout << "Failed to open the file." << std::endl;
-       exit;
+        exit;
     }
 
     inputFile.seekg(0, std::ios::end);
@@ -193,7 +190,7 @@ void ExchangeInfoClass::readQueryFile()
         if (newData != prevQueryData)
         {
             std::string appendedData = newData.substr(prevQueryData.length());
-            std::cout<<"appedned data="<<appendedData<<std::endl;
+            std::cout << "appedned data=" << appendedData << std::endl;
             queryCheck(appendedData);
             prevQueryData = newData;
         }
@@ -201,10 +198,7 @@ void ExchangeInfoClass::readQueryFile()
         // Wait for 1 second before checking for updates again
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-
- 
 }
-
 
 void ExchangeInfoClass::queryCheck(std::string &queryContent)
 {
@@ -228,12 +222,14 @@ void ExchangeInfoClass::queryCheck(std::string &queryContent)
     if (docRead.HasParseError())
     {
         // std::cout << "Failed to parse QUERY JSON." << std::endl;
-        if (fileLog){
+        if (fileLog)
+        {
             fileLogger->error("Failed to open query.json file");
-        fileLogger->flush();
+            fileLogger->flush();
         }
 
-        if (consoleLog){
+        if (consoleLog)
+        {
             consoleLogger->error("Failed to open query.json file");
         }
         //  inputFile.close();
@@ -293,11 +289,11 @@ void ExchangeInfoClass::queryCheck(std::string &queryContent)
                 }
                 else if (queryType == "UPDATE")
                 {
-                   // ExchangeInfoClass::updatetData(queryObject);
+                    // ExchangeInfoClass::updatetData(queryObject);
                 }
                 else
                 {
-                   // ExchangeInfoClass::deleteData(id, instrumentName);
+                     ExchangeInfoClass::deleteData(id, instrumentName);
                 }
             }
 
@@ -338,13 +334,13 @@ void ExchangeInfoClass::queryCheck(std::string &queryContent)
     }
 }
 
-void ExchangeInfoClass::getData(const std::string& instrumentName)
+void ExchangeInfoClass::getData(const std::string &instrumentName)
 {
     std::cout << "QUERY TYPE IS GET" << std::endl;
 
     if (symbolDataMap.find(instrumentName) != symbolDataMap.end())
     {
-        const rapidjson::Value& symbolData = symbolDataMap[instrumentName];
+        const rapidjson::Value &symbolData = symbolDataMap[instrumentName];
 
         rapidjson::Document queryDoc;
         std::ifstream ansFile("answers.json");
@@ -359,7 +355,7 @@ void ExchangeInfoClass::getData(const std::string& instrumentName)
             queryDoc.SetObject();
         }
 
-        rapidjson::Document::AllocatorType& allocator = queryDoc.GetAllocator();
+        rapidjson::Document::AllocatorType &allocator = queryDoc.GetAllocator();
 
         if (!queryDoc.HasMember("answers"))
         {
@@ -386,12 +382,14 @@ void ExchangeInfoClass::getData(const std::string& instrumentName)
         std::ofstream ansFileWrite("answers.json");
         if (!ansFileWrite.is_open())
         {
-            if (fileLog){
+            if (fileLog)
+            {
                 fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
                 fileLogger->flush();
             }
 
-            if (consoleLog){
+            if (consoleLog)
+            {
                 consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
             }
             exit(1);
@@ -403,7 +401,8 @@ void ExchangeInfoClass::getData(const std::string& instrumentName)
 
         ansFileWrite.close();
 
-        if (consoleLog){
+        if (consoleLog)
+        {
             consoleLogger->error("Data written in file successfully");
         }
     }
@@ -413,6 +412,109 @@ void ExchangeInfoClass::getData(const std::string& instrumentName)
     }
 }
 
+void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
+{
+
+    std::ifstream ansFile("answers.json");
+    if (!ansFile.is_open())
+    {
+        if (fileLog)
+        {
+            fileLogger->error("ENCOUNTERED ERROR WHILE OPEING answers.json FILE");
+            fileLogger->flush();
+        }
+
+        if (consoleLog)
+        {
+            consoleLogger->error("ENCOUNTERED ERROR WHILE OPEING answers.json FILE");
+        }
+        exit(1);
+    }
+
+    rapidjson::Document answerDoc;
+    rapidjson::IStreamWrapper ansFileStreamWrapper(ansFile);
+    answerDoc.ParseStream(ansFileStreamWrapper);
+
+    ansFile.close();
+
+    if (answerDoc.HasParseError())
+    {
+        if (fileLog)
+        {
+            fileLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+            fileLogger->flush();
+        }
+
+        if (consoleLog)
+        {
+            consoleLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+        }
+        exit(1);
+    }
+
+    if (answerDoc.IsObject() && answerDoc.HasMember("answers"))
+    {
+        rapidjson::Value &answersArray = answerDoc["answers"];
+        rapidjson::SizeType index = 0;
+
+        while (index < answersArray.Size())
+        {
+            if (answersArray[index].IsObject())
+            {
+                const rapidjson::Value &answerObject = answersArray[index];
+
+                if (answerObject.HasMember("ID") && answerObject["ID"].IsString() && answerObject.HasMember("symbol") && answerObject["symbol"].IsString())
+                {
+
+                    std::string ansID = answerObject["ID"].GetString();
+                    std::string ansSymbol = answerObject["symbol"].GetString();
+
+                    if (std::stoi(ansID) == id && ansSymbol == instrumentName)
+                    {
+
+                        if (consoleLog)
+                        {
+                            consoleLogger->debug("deleting data");
+                        }
+                        answersArray.Erase(answersArray.Begin() + index);
+                    }
+                    else
+                    {
+
+                        index++;
+                    }
+                }
+            }
+            else
+            {
+
+                index++;
+            }
+        }
+    }
+
+    std::ofstream ansFileWrite("answers.json");
+    if (!ansFileWrite.is_open())
+    {
+        if (fileLog)
+        {
+            fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+            fileLogger->flush();
+        }
+
+        if (consoleLog)
+        {
+            consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+        }
+        exit(1);
+    }
+
+    rapidjson::OStreamWrapper answersStreamWrapper(ansFileWrite);
+    rapidjson::PrettyWriter<rapidjson::OStreamWrapper> answersWriter(answersStreamWrapper);
+    answerDoc.Accept(answersWriter);
+
+    ansFileWrite.close();
+}
 
 /*
 exchangeInfo::exchangeInfoClass::exchangeInfoClass()
