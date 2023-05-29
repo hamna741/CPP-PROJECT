@@ -4,10 +4,20 @@
 
 int main()
 {  
-     exchangeInfo::exchangeInfoClass info;
+ 
+ //info.extractSymbols(jsonString);
+
+  /////////////////////////////////////////////////
+  
+  ExchangeInfoClass info;
+  info.configFunc();
+info.getExchangeInfo();
+   info.readQueryFile();
    //  info.getExchangeInfo();
-    info.readQueryFile();
+   std::cout<<"dfs";
+   // info.readQueryFile();
    // info.getData();
+   
 /////////////////////////////////////////////////////////////////////////////////////////RETRIEVING EXCHANGE INFO
    
 ///////////////////////////////////////////////////////////////////////////////////////////////////// READING QUERY FILE
