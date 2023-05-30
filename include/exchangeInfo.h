@@ -82,13 +82,14 @@ private:
     int id;
     std::string instrumentName;
     bool fileLog, consoleLog;
+    std::string url;
     std::map<int, std::string> prevData;
     std::shared_ptr<spdlog::logger> fileLogger;
     std::shared_ptr<spdlog::logger> consoleLogger;
 
 public:
     //  ExchangeInfoClass();
-    void configFunc();
+    int configFunc();
     void getExchangeInfo();
     void readQueryFile();
     void queryCheck(std::string &queryContent);
