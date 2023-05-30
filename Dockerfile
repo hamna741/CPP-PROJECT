@@ -5,7 +5,7 @@ RUN apt-get update && \
   
 # RUN apt-get install -y build-essential cmake g++ libssl-dev
 
-# RUN apt-get install -y libssl1.1
+ RUN apt-get install -y libssl1.1.1f
 WORKDIR /app
 RUN mkdir -p ./files
 RUN mkdir -p ./build
