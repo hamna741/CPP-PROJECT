@@ -92,7 +92,7 @@ public:
     int configFunc();
     void getExchangeInfo();
     void readQueryFile();
-    void queryCheck(std::string &queryContent);
+    void queryCheck(const rapidjson::Value& queryContent);
     void deleteData(int id, std::string instrumentName);
     void getData(const std::string& instrumentName);
     void updatetData(const rapidjson::Value &queryObject);
