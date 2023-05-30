@@ -9,7 +9,7 @@ int ExchangeInfoClass::configFunc()
 
     if (!configFile.is_open())
     {
-        std::cout << "Failed to open the file." << std::endl;
+        std::cout << "Failed to open config the file." << std::endl;
     }
     rapidjson::Document configDoc;
     rapidjson::IStreamWrapper exchangeInfoStreamWrapper(configFile);
@@ -149,7 +149,88 @@ void ExchangeInfoClass::getExchangeInfo()
             } })
         .wait();
 }
+void ExchangeInfoClass::readQueryFile()
+{
+    std::string prevQueryData;
+    std::ifstream inputFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/queryfile.json");
 
+    if (!inputFile.is_open())
+    {
+        std::cout << "Failed to open the file." << std::endl;
+        exit;
+    }
+
+    inputFile.seekg(0, std::ios::end);
+    std::streampos fileSize = inputFile.tellg();
+    inputFile.seekg(0, std::ios::beg);
+
+    std::string currentData(fileSize, ' ');
+    inputFile.read(&currentData[0], fileSize);
+    inputFile.close();
+
+    while (true)
+    {
+        std::ifstream inputFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/queryfile.json");
+
+        if (!inputFile.is_open())
+        {
+            std::cout << "Failed to open the file." << std::endl;
+            if (fileLog)
+                fileLogger->error("failed to open query.json file");
+            if (consoleLog)
+                fileLogger->error("failed to open query.json file");
+            std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for 1 second before retrying
+            continue;
+        }
+
+        inputFile.seekg(0, std::ios::end);
+        fileSize = inputFile.tellg();
+        inputFile.seekg(0, std::ios::beg);
+
+        std::string newData(fileSize, ' ');
+        inputFile.read(&newData[0], fileSize);
+        inputFile.close();
+
+        if (newData != prevQueryData)
+        {
+            // Parse the JSON data
+            rapidjson::Document document;
+            document.Parse(newData.c_str());
+
+            if (!document.HasParseError() && document.IsObject())
+            {
+                // Check if "query" array exists
+                if (document.HasMember("query") && document["query"].IsArray())
+                {
+                    const rapidjson::Value& queryArray = document["query"];
+                    for (rapidjson::SizeType i = 0; i < queryArray.Size(); i++)
+                    {
+                        const rapidjson::Value& queryData = queryArray[i];
+                        // Access and process individual query data elements here
+                        // Example: std::string queryText = queryData["text"].GetString();
+                        // Example: int queryId = queryData["id"].GetInt();
+                        
+                        queryCheck(queryData);
+                    }
+                }
+            }
+            else
+            {
+                std::cout << "Failed to parse the JSON data." << std::endl;
+                if (fileLog)
+                    fileLogger->error("failed to parse JSON data");
+                if (consoleLog)
+                    fileLogger->error("failed to parse JSON data");
+            }
+
+            prevQueryData = newData;
+        }
+
+        // Wait for 1 second before checking for updates again
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
+/*
 void ExchangeInfoClass::readQueryFile()
 {
     std::string prevQueryData;
@@ -204,6 +285,110 @@ void ExchangeInfoClass::readQueryFile()
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
+*/
+
+void ExchangeInfoClass::queryCheck(const rapidjson::Value& queryContent)
+{
+    if (queryContent.IsObject())
+    {
+        if (queryContent.HasMember("id") && queryContent["id"].IsInt())
+        {
+            id = queryContent["id"].GetInt();
+            std::cout << "ID: " << id << std::endl;
+        }
+
+        if (queryContent.HasMember("instrument_name") && queryContent["instrument_name"].IsString())
+        {
+            instrumentName = queryContent["instrument_name"].GetString();
+            std::cout << "Instrument Name: " << instrumentName << std::endl;
+        }
+
+        if (queryContent.HasMember("query_type") && queryContent["query_type"].IsString())
+        {
+            std::string queryType = queryContent["query_type"].GetString();
+            std::cout << "Query Type: " << queryType << std::endl;
+
+            if (queryType == "GET")
+            {
+                if (fileLog)
+                {
+                    fileLogger->info("Query type is GET");
+                    fileLogger->flush();
+                }
+                if (consoleLog)
+                {
+                    consoleLogger->debug("Query type is GET");
+                }
+
+                if (prevData[id] == instrumentName)
+                {
+                    std::cout << "Request repeated" << std::endl;
+                }
+                else
+                {
+                    prevData[id] = instrumentName;
+                    ExchangeInfoClass::getData(instrumentName);
+                }
+            }
+            else if (queryType == "UPDATE")
+            {
+                ExchangeInfoClass::updatetData(queryContent);
+            }
+            else if (queryType == "DELETE")
+            {
+                ExchangeInfoClass::deleteData(id, instrumentName);
+            }
+            else
+            {
+                if (fileLog)
+                {
+                    fileLogger->error("Unknown query type: " + queryType);
+                    fileLogger->flush();
+                }
+                if (consoleLog)
+                {
+                    consoleLogger->error("Unknown query type: " + queryType);
+                }
+            }
+        }
+
+        if (queryContent.HasMember("data"))
+        {
+            const rapidjson::Value& data = queryContent["data"];
+
+            if (data.IsArray())
+            {
+                std::cout << "Data:" << std::endl;
+                for (rapidjson::SizeType j = 0; j < data.Size(); j++)
+                {
+                    if (data[j].IsString())
+                    {
+                        std::string value = data[j].GetString();
+                        std::cout << value << std::endl;
+                    }
+                }
+            }
+            else if (data.IsObject())
+            {
+                std::cout << "Data:" << std::endl;
+                for (rapidjson::Value::ConstMemberIterator itr = data.MemberBegin(); itr != data.MemberEnd(); ++itr)
+                {
+                    if (itr->value.IsString())
+                    {
+                        std::string key = itr->name.GetString();
+                        std::string value = itr->value.GetString();
+                        std::cout << key << ": " << value << std::endl;
+                    }
+                }
+            }
+        }
+
+        std::cout << std::endl;
+    }
+}
+
+/*
+
 
 void ExchangeInfoClass::queryCheck(std::string &queryContent)
 {
@@ -338,7 +523,7 @@ void ExchangeInfoClass::queryCheck(std::string &queryContent)
         }
     }
 }
-
+*/
 void ExchangeInfoClass::getData(const std::string &instrumentName)
 {
     std::cout << "QUERY TYPE IS GET" << std::endl;
@@ -349,7 +534,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
         const rapidjson::Value &symbolData = symbolDataMap[instrumentName];
 
         rapidjson::Document queryDoc;
-        std::ifstream ansFile("answers.json");
+        std::ifstream ansFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
         if (ansFile.is_open())
         {
             rapidjson::IStreamWrapper ansStreamWrapper(ansFile);
@@ -385,7 +570,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
         queryDoc["answers"] = answersArray;
 
         // Write the updated queryDoc to answers.json
-        std::ofstream ansFileWrite("answers.json");
+        std::ofstream ansFileWrite("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
         if (!ansFileWrite.is_open())
         {
             if (fileLog)
@@ -421,7 +606,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
 void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
 {
 
-    std::ifstream ansFile("answers.json");
+    std::ifstream ansFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
     if (!ansFile.is_open())
     {
         if (fileLog)
@@ -499,7 +684,7 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
         }
     }
 
-    std::ofstream ansFileWrite("answers.json");
+    std::ofstream ansFileWrite("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
     if (!ansFileWrite.is_open())
     {
         if (fileLog)
@@ -531,7 +716,7 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
         const rapidjson::Value &newData = queryObject["data"];
 
 
-        std::ifstream ansFile("answers.json");
+        std::ifstream ansFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
 
         if (!ansFile.is_open())
         {
@@ -596,7 +781,7 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
             }
         }
 
-        std::ofstream ansFileWrite("answers.json");
+        std::ofstream ansFileWrite("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
         if (!ansFileWrite.is_open())
         {
             if (fileLog){
