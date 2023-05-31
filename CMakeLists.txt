@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.9)
 PROJECT(EXCHANGE_INFO)
+option(BUILD_BENCHMARKS "Build benchmarks" OFF)
+
 
 include_directories(include)
 
@@ -12,6 +14,11 @@ add_library(exchangeInfo SHARED src/exchangeInfo.cpp)
 target_link_libraries(exchangeInfo )
 add_executable(output src/main.cpp)
 target_link_libraries(output exchangeInfo cpprestsdk::cpprest Boost::system Threads::Threads OpenSSL::Crypto)
+if(BUILD_BENCHMARKS)
+    message("Building benchmarks")
+    add_subdirectory(/home/hamna/Desktop/myproject/CPP-PROJECT/benchmark)
+    add_subdirectory(/home/hamna/Desktop/myproject/CPP-PROJECT/BENCHMARKING)
+endif()
 ############################################################################################################################
 # cmake_minimum_required(VERSION 2.8.9)
 # project(EXCHANGE_INFO)
