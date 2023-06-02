@@ -1,20 +1,23 @@
 FROM ubuntu
-COPY requirements.txt requirements.txt
 RUN apt-get update && \
-    xargs -a requirements.txt apt-get install -y
-  
-# RUN apt-get install -y build-essential cmake g++ libssl-dev
+    apt-get install -y \
+    cmake protobuf-compiler\
+    make \
+    git \
+    gcc \
+    g++
 
- RUN apt-get install -y libssl1.1.1f
-WORKDIR /app
+
+RUN mkdir /CPP-PROJECT && cd /CPP-PROJECT
 RUN mkdir -p ./files
-RUN mkdir -p ./build
-ENV LD_LIBRARY_PATH=./build/libexchangeInfo.so:$LD_LIBRARY_PATH
-
-
-#COPY * /app
-COPY ./build/libexchangeInfo.so /app/build/
-COPY ./files/* /app/files/
-COPY ./build/output /app/build/
-
-#CMD  ./build/output
+RUN mkdir -p ./src
+RUN mkdir -p ./include
+WORKDIR /cpp-PROJECT
+COPY ./files/* ./files/
+COPY ./src/* ./src/
+COPY ./include/* ./include/
+COPY ./cmake-files ./cmake-files/
+COPY CMakeLists.txt ./
+RUN mkdir ./build && cd build ; cmake .. && make
+#RUN RUN cmake ..
+#CMD  ./output
