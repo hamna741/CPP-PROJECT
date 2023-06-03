@@ -8,16 +8,16 @@ RUN apt-get update && \
     g++
 
 
-RUN mkdir /CPP-PROJECT && cd /CPP-PROJECT
+WORKDIR /CPP-PROJECT
 RUN mkdir -p ./files
 RUN mkdir -p ./src
 RUN mkdir -p ./include
-WORKDIR /cpp-PROJECT
+
 COPY ./files/* ./files/
 COPY ./src/* ./src/
 COPY ./include/* ./include/
 COPY ./cmake-files ./cmake-files/
 COPY CMakeLists.txt ./
-RUN mkdir ./build && cd build ; cmake .. && make
+RUN mkdir ./build
 #RUN RUN cmake ..
 #CMD  ./output
