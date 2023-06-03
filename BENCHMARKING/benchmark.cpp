@@ -5,20 +5,17 @@
 
 static void BM_getData(benchmark::State &state)
 {
-  
+  ExchangeInfoClass info;
+   std::string url="https://fapi.binance.com";
     for (auto _ : state)
     {
-         int N = state.range(0);
-        
-     // ExchangeInfoClass::getData();
-        
+       info.getExchangeInfo();
     }
  
 }
 
 
-
-BENCHMARK(BM_getData)->RangeMultiplier(3)->Range(1,1<<10)->Complexity(benchmark::oAuto);
+BENCHMARK(BM_getData);
 
 
 BENCHMARK_MAIN();
