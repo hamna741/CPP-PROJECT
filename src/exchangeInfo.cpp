@@ -5,7 +5,7 @@ int ExchangeInfoClass::configFunc()
     std::string logLevel;
  int interval;
     std::string prevQueryData;
-    std::ifstream configFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/configFile.json");
+    std::ifstream configFile("/CPP-PROJECT/files/configFile.json");
 
     if (!configFile.is_open())
     {
@@ -36,7 +36,7 @@ int ExchangeInfoClass::configFunc()
             if (fileLog)
             {
                 std::cout << "call setfilelog" << std::endl;
-                fileLogger = spdlog::basic_logger_mt("file_logger", "/home/hamna/Desktop/myproject/CPP-PROJECT/build/log_file.txt");
+                fileLogger = spdlog::basic_logger_mt("file_logger", "/CPP-PROJECT/build/log_file.txt");
                 spdlog::set_default_logger(fileLogger);
             }
         }
@@ -152,7 +152,7 @@ void ExchangeInfoClass::getExchangeInfo()
 void ExchangeInfoClass::readQueryFile()
 {
     std::string prevQueryData;
-    std::ifstream inputFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/queryfile.json");
+    std::ifstream inputFile("/CPP-PROJECT/files/queryfile.json");
 
     if (!inputFile.is_open())
     {
@@ -170,7 +170,7 @@ void ExchangeInfoClass::readQueryFile()
 
     while (true)
     {
-        std::ifstream inputFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/queryfile.json");
+        std::ifstream inputFile("/CPP-PROJECT/files/queryfile.json");
 
         if (!inputFile.is_open())
         {
@@ -341,7 +341,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
         const rapidjson::Value &symbolData = symbolDataMap[instrumentName];
 
         rapidjson::Document queryDoc;
-        std::ifstream ansFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
+        std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
         if (ansFile.is_open())
         {
             rapidjson::IStreamWrapper ansStreamWrapper(ansFile);
@@ -377,7 +377,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
         queryDoc["answers"] = answersArray;
 
        
-        std::ofstream ansFileWrite("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
+        std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
         if (!ansFileWrite.is_open())
         {
             if (fileLog)
@@ -413,7 +413,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
 void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
 {
 
-    std::ifstream ansFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
+    std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
     if (!ansFile.is_open())
     {
         if (fileLog)
@@ -491,7 +491,7 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
         }
     }
 
-    std::ofstream ansFileWrite("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
+    std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
     if (!ansFileWrite.is_open())
     {
         if (fileLog)
@@ -523,7 +523,7 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
         const rapidjson::Value &newData = queryObject["data"];
 
 
-        std::ifstream ansFile("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
+        std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
 
         if (!ansFile.is_open())
         {
@@ -588,7 +588,7 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
             }
         }
 
-        std::ofstream ansFileWrite("/home/hamna/Desktop/myproject/CPP-PROJECT/files/answers.json");
+        std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
         if (!ansFileWrite.is_open())
         {
             if (fileLog){
