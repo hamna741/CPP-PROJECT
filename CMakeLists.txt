@@ -15,6 +15,20 @@ find_package(Threads  REQUIRED)
 find_package(spdlog REQUIRED)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
+option(BUILD_TESTS "Build unit tests" OFF )
+option(BUILD_BENCHMARKS "Build benchmarks" OFF)
+if(BUILD_TESTS)
+    message("Building GTEST")
+    add_subdirectory(./googletest)
+    add_subdirectory(./unittest)
+  
+endif()
+
+if(BUILD_BENCHMARKS)
+    message("Building benchmarks")
+    add_subdirectory(./benchmark)
+    add_subdirectory(./BENCHMARK)
+endif()
 
 add_library(exchangeInfo SHARED  ${CMAKE_SOURCE_DIR}/src/exchangeInfo.cpp)
 add_executable(output  ${CMAKE_SOURCE_DIR}/src/main.cpp)
