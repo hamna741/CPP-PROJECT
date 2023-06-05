@@ -83,7 +83,7 @@ void ExchangeInfoClass::getExchangeInfo()
 
             if (!document.HasParseError()) {
                 
-                std::map<std::string, rapidjson::Value> symbolData;
+                //std::map<std::string, rapidjson::Value> symbolData;
 
                 const rapidjson::Value& symbols = document["symbols"];
                 if (symbols.IsArray()) {
@@ -128,11 +128,11 @@ void ExchangeInfoClass::getExchangeInfo()
                             }
                         }
 
-                        symbolData[symbolName] = dataObject;
+                        symbolDataMap[symbolName] = dataObject;
                     }
                 }
 
-                symbolDataMap = std::move(symbolData);
+              //  symbolDataMap = std::move(symbolData);
 
                 if (consoleLog) {
                     consoleLogger->info("Exchange info retrieved successfully");
@@ -304,38 +304,38 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value& queryContent)
             }
         }
 
-        if (queryContent.HasMember("data"))
-        {
-            const rapidjson::Value& data = queryContent["data"];
+        // if (queryContent.HasMember("data"))
+        // {
+        //     const rapidjson::Value& data = queryContent["data"];
 
-            if (data.IsArray())
-            {
-                std::cout << "Data:" << std::endl;
-                for (rapidjson::SizeType j = 0; j < data.Size(); j++)
-                {
-                    if (data[j].IsString())
-                    {
-                        std::string value = data[j].GetString();
-                        std::cout << value << std::endl;
-                    }
-                }
-            }
-            else if (data.IsObject())
-            {
-                std::cout << "Data:" << std::endl;
-                for (rapidjson::Value::ConstMemberIterator itr = data.MemberBegin(); itr != data.MemberEnd(); ++itr)
-                {
-                    if (itr->value.IsString())
-                    {
-                        std::string key = itr->name.GetString();
-                        std::string value = itr->value.GetString();
-                        std::cout << key << ": " << value << std::endl;
-                    }
-                }
-            }
-        }
+        //     if (data.IsArray())
+        //     {
+        //         std::cout << "Data:" << std::endl;
+        //         for (rapidjson::SizeType j = 0; j < data.Size(); j++)
+        //         {
+        //             if (data[j].IsString())
+        //             {
+        //                 std::string value = data[j].GetString();
+        //                 std::cout << value << std::endl;
+        //             }
+        //         }
+        //     }
+        //     else if (data.IsObject())
+        //     {
+        //         std::cout << "Data:" << std::endl;
+        //         for (rapidjson::Value::ConstMemberIterator itr = data.MemberBegin(); itr != data.MemberEnd(); ++itr)
+        //         {
+        //             if (itr->value.IsString())
+        //             {
+        //                 std::string key = itr->name.GetString();
+        //                 std::string value = itr->value.GetString();
+        //                 std::cout << key << ": " << value << std::endl;
+        //             }
+        //         }
+        //     }
+        // }
 
-        std::cout << std::endl;
+        // std::cout << std::endl;
     }
 }
 
@@ -399,7 +399,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
             {
                 consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
             }
-            exit(1);
+           throw std::runtime_error("CANNOT OPEN FILE");
         }
 
         rapidjson::OStreamWrapper answersStreamWrapper(ansFileWrite);
