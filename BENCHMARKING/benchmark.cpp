@@ -23,6 +23,18 @@ static void BM_getData(benchmark::State &state)
  
 }
 
+static void BM_DeleteData(benchmark::State &state)
+{
+  ExchangeInfoClass info;
+   int id =17;
+   std::string instrumentName ="BCHUSDT";
+
+    for (auto _ : state) {
+        info.deleteData(id ,instrumentName);
+    }
+ 
+}
+
 
 BENCHMARK(BM_getData);
 
