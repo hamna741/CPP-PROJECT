@@ -380,6 +380,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
         result.AddMember("ID", rapidjson::Value(strId, allocator).Move(), allocator);
         result.AddMember("symbol", rapidjson::Value(instrumentName.c_str(), allocator).Move(), allocator);
         result.AddMember("data", dataObject, allocator); 
+        result.AddMember("data", dataObject, allocator); 
 
         answersArray.PushBack(result, allocator);
 
