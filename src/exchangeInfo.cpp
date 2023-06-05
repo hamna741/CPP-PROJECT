@@ -9,7 +9,7 @@ int ExchangeInfoClass::configFunc()
 
     if (!configFile.is_open())
     {
-        std::cout << "Failed to open config the file." << std::endl;
+        throw std::runtime_error("Failed to open config the file." );
     }
     rapidjson::Document configDoc;
     rapidjson::IStreamWrapper exchangeInfoStreamWrapper(configFile);
@@ -19,7 +19,7 @@ int ExchangeInfoClass::configFunc()
 
     if (configDoc.HasParseError())
     {
-        std::cout << "Failed to parse JSON response." << std::endl;
+        throw std::runtime_error( "Failed to parse JSON response.");
         exit(1);
     }
     if (configDoc.HasMember("logging") && configDoc["logging"].IsObject())
@@ -35,7 +35,7 @@ int ExchangeInfoClass::configFunc()
             fileLog = loggingConfig["file"].GetBool();
             if (fileLog)
             {
-                std::cout << "call setfilelog" << std::endl;
+                
                 fileLogger = spdlog::basic_logger_mt("file_logger", "/CPP-PROJECT/build/log_file.txt");
                 spdlog::set_default_logger(fileLogger);
             }
@@ -45,7 +45,7 @@ int ExchangeInfoClass::configFunc()
             consoleLog = loggingConfig["console"].GetBool();
             if (consoleLog)
             {
-                std::cout << "call consolelog" << std::endl;
+                
                 consoleLogger = spdlog::stdout_color_mt("console");
                 spdlog::set_default_logger(consoleLogger);
             }
@@ -156,7 +156,7 @@ void ExchangeInfoClass::readQueryFile()
 
     if (!inputFile.is_open())
     {
-        std::cout << "Failed to open the file." << std::endl;
+        throw std::runtime_error("Failed to open the file.");
         exit;
     }
 
@@ -174,12 +174,12 @@ void ExchangeInfoClass::readQueryFile()
 
         if (!inputFile.is_open())
         {
-            std::cout << "Failed to open the file." << std::endl;
+            throw std::runtime_error( "Failed to open the file.");
             if (fileLog)
                 fileLogger->error("failed to open query.json file");
             if (consoleLog)
                 fileLogger->error("failed to open query.json file");
-            std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait for 1 second before retrying
+            std::this_thread::sleep_for(std::chrono::seconds(1)); 
             continue;
         }
 
@@ -214,7 +214,7 @@ void ExchangeInfoClass::readQueryFile()
             }
             else
             {
-                std::cout << "Failed to parse the JSON data." << std::endl;
+                throw std::runtime_error( "Failed to parse the JSON data.");
                 if (fileLog)
                     fileLogger->error("failed to parse JSON data");
                 if (consoleLog)
@@ -224,7 +224,7 @@ void ExchangeInfoClass::readQueryFile()
             prevQueryData = newData;
         }
 
-        // Wait for 1 second before checking for updates again
+        
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 }
@@ -237,19 +237,19 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value& queryContent)
         if (queryContent.HasMember("id") && queryContent["id"].IsInt())
         {
             id = queryContent["id"].GetInt();
-            std::cout << "ID: " << id << std::endl;
+            
         }
 
         if (queryContent.HasMember("instrument_name") && queryContent["instrument_name"].IsString())
         {
             instrumentName = queryContent["instrument_name"].GetString();
-            std::cout << "Instrument Name: " << instrumentName << std::endl;
+           
         }
 
         if (queryContent.HasMember("query_type") && queryContent["query_type"].IsString())
         {
             std::string queryType = queryContent["query_type"].GetString();
-            std::cout << "Query Type: " << queryType << std::endl;
+            
 
             if (queryType == "GET")
             {
@@ -265,7 +265,16 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value& queryContent)
 
                 if (prevData[id] == instrumentName)
                 {
-                    std::cout << "Request repeated" << std::endl;
+                     if (fileLog)
+                {
+                    fileLogger->info("Request repeated");
+                    fileLogger->flush();
+                }
+                if (consoleLog)
+                {
+                    consoleLogger->debug("Request repeated");
+                }
+                   
                 }
                 else
                 {
@@ -333,7 +342,7 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value& queryContent)
 
 void ExchangeInfoClass::getData(const std::string &instrumentName)
 {
-    std::cout << "QUERY TYPE IS GET" << std::endl;
+   
 
 
     if (symbolDataMap.find(instrumentName) != symbolDataMap.end())
@@ -406,7 +415,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName)
     }
     else
     {
-        std::cout << "Symbol not found." << std::endl;
+        throw std::runtime_error("Symbol not found.");
     }
 }
 
