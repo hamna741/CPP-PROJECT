@@ -1,13 +1,18 @@
 FROM ubuntu
 RUN apt-get update && \
     apt-get install -y \
-    cmake protobuf-compiler\
+    cmake \
     make \
     git \
     gcc \
-    g++
+    g++ 
 
+RUN apt-get update -y && apt-get install -y g++ make wget libboost-all-dev git \
+libcpprest-dev \
+libspdlog-dev \
+rapidjson-dev
 
+RUN  mkdir /CPP-PROJECT
 WORKDIR /CPP-PROJECT
 RUN mkdir -p ./files
 RUN mkdir -p ./src
