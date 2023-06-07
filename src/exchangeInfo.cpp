@@ -62,175 +62,174 @@ int ExchangeInfoClass::configFunc()
     return interval;
 }
 
-void ExchangeInfoClass::getBoostExchangeInfo()
-{
-    boost::asio::io_context io;
-    boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
-    ctx.set_verify_mode(boost::asio::ssl::verify_peer);
-    // ctx.load_verify_file("ca.pem");
-    ctx.add_verify_path("/etc/ssl/certs");
+// void ExchangeInfoClass::getBoostExchangeInfo()
+// {
+//     boost::asio::io_context io;
+//     boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
+//     ctx.set_verify_mode(boost::asio::ssl::verify_peer);
+//     // ctx.load_verify_file("ca.pem");
+//     ctx.add_verify_path("/etc/ssl/certs");
 
-    ctx.set_options(boost::asio::ssl::context::default_workarounds |
-                    boost::asio::ssl::context::no_sslv2 |
-                    boost::asio::ssl::context::no_sslv3);
-    boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket(io,
-                                                                  ctx);
-    boost::asio::ip::tcp::resolver resolver(io);
-    // boost::asio::ip::tcp::socket socket(io);
-    boost::system::error_code err;
-    boost::asio::ip::tcp::resolver::query query(url, "https");
-    std::cout << "1" << std::endl;
-    auto const results = resolver.resolve(query);
-    boost::asio::ip::tcp::resolver::iterator endpoint_iterator = results;
-    // boost::asio::ip::tcp::endpoint connectionEndpoint(endpoint_iterator->address(), 80);
-    std::cout << "2" << std::endl;
-    boost::asio::ip::tcp::resolver::iterator end;
+//     ctx.set_options(boost::asio::ssl::context::default_workarounds |
+//                     boost::asio::ssl::context::no_sslv2 |
+//                     boost::asio::ssl::context::no_sslv3);
+//     boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket(io,
+//                                                                   ctx);
+//     boost::asio::ip::tcp::resolver resolver(io);
+//     // boost::asio::ip::tcp::socket socket(io);
+//     boost::system::error_code err;
+//     boost::asio::ip::tcp::resolver::query query(url, "https");
+//     std::cout << "1" << std::endl;
+//     auto const results = resolver.resolve(query);
+//     boost::asio::ip::tcp::resolver::iterator endpoint_iterator = results;
+//     // boost::asio::ip::tcp::endpoint connectionEndpoint(endpoint_iterator->address(), 80);
+//     std::cout << "2" << std::endl;
+//     boost::asio::ip::tcp::resolver::iterator end;
 
-    boost::asio::connect(socket.lowest_layer(), endpoint_iterator, end, err);
-    if (!err)
-        std::cout << "connected" << std::endl;
-    else
-        std::cout << "not connected" << std::endl;
-    // boost::asio::connect(socket, endpoint_iterator);
+//     boost::asio::connect(socket.lowest_layer(), endpoint_iterator, end, err);
+//     if (!err)
+//         std::cout << "connected" << std::endl;
+//     else
+//         std::cout << "not connected" << std::endl;
+//     // boost::asio::connect(socket, endpoint_iterator);
 
-    boost::asio::streambuf request;
-    socket.handshake(boost::asio::ssl::stream_base::client);
-    {
-        std::ostream request_stream(&request);
+//     boost::asio::streambuf request;
+//     socket.handshake(boost::asio::ssl::stream_base::client);
+//     {
+//         std::ostream request_stream(&request);
 
-        request_stream << "GET "
-                       << "/fapi/v1/exchangeInfo"
-                       << " HTTP/1.1\r\n";
-        // request_stream << "GET " << "/fapi/v1/exchangeInfo" << " HTTPS/1.0\r\n";  // note that you can change it if you wish to HTTP/1.0
-        request_stream << "Host: " << url << "\r\n";
-        request_stream << "Accept: */*\r\n";
-        request_stream << "Connection: close\r\n\r\n";
-    }
+//         request_stream << "GET "
+//                        << "/fapi/v1/exchangeInfo"
+//                        << " HTTP/1.1\r\n";
+//         // request_stream << "GET " << "/fapi/v1/exchangeInfo" << " HTTPS/1.0\r\n";  // note that you can change it if you wish to HTTP/1.0
+//         request_stream << "Host: " << url << "\r\n";
+//         request_stream << "Accept: */*\r\n";
+//         request_stream << "Connection: close\r\n\r\n";
+//     }
 
-    boost::asio::write(socket, request);
+//     boost::asio::write(socket, request);
 
-    boost::asio::streambuf response_;
-    boost::system::error_code ec;
-    read(socket, response_, ec);
-    std::istream response_stream(&response_);
-    // std::cout << &response_ << "\n";
-    //  std::cout << &response_ << "\n";
-    // std::istream response_stream(&response_);
-    std::string http_version;
-    unsigned int status_code;
-    response_stream >> http_version >> status_code;
-    std::cout << "Status Code: " << status_code << std::endl;
-    if (status_code == 200)
-    {
-        boost::asio::read_until(socket, response_, "\r\n\r\n");
-        std::string response_body;
-        std::ostringstream response_body_stream;
-        response_body_stream << &response_;
-        response_body = response_body_stream.str();
+//     boost::asio::streambuf response_;
+//     boost::system::error_code ec;
+//     read(socket, response_, ec);
+//     std::istream response_stream(&response_);
+//     // std::cout << &response_ << "\n";
+//     //  std::cout << &response_ << "\n";
+//     // std::istream response_stream(&response_);
+//     std::string http_version;
+//     unsigned int status_code;
+//     response_stream >> http_version >> status_code;
+//     std::cout << "Status Code: " << status_code << std::endl;
+//     if (status_code == 200)
+//     {
+//         boost::asio::read_until(socket, response_, "\r\n\r\n");
+//         std::string response_body;
+//         std::ostringstream response_body_stream;
+//         response_body_stream << &response_;
+//         response_body = response_body_stream.str();
 
-        // Read the remaining response data as the body
-        size_t content_start = response_body.find("\r\n\r\n") + 4; // Find the start of the content
-        std::string response_content = response_body.substr(content_start);
-        std::cout << "Response Content:\n"
-                  << response_content << std::endl;
-        rapidjson::Document document;
-        document.Parse(response_content.c_str());
+//         size_t content_start = response_body.find("\r\n\r\n") + 4;
+//         std::string response_content = response_body.substr(content_start);
+//         std::cout << "Response Content:\n"
+//                   << response_content << std::endl;
+//         rapidjson::Document document;
+//         document.Parse(response_content.c_str());
 
-        if (!document.HasParseError())
-        {
+//         if (!document.HasParseError())
+//         {
 
-            // std::map<std::string, rapidjson::Value> symbolData;
+//             // std::map<std::string, rapidjson::Value> symbolData;
 
-            const rapidjson::Value &symbols = document["symbols"];
-            if (symbols.IsArray())
-            {
-                for (rapidjson::SizeType i = 0; i < symbols.Size(); i++)
-                {
-                    const rapidjson::Value &symbol = symbols[i];
+//             const rapidjson::Value &symbols = document["symbols"];
+//             if (symbols.IsArray())
+//             {
+//                 for (rapidjson::SizeType i = 0; i < symbols.Size(); i++)
+//                 {
+//                     const rapidjson::Value &symbol = symbols[i];
 
-                    std::string symbolName = symbol["symbol"].GetString();
+//                     std::string symbolName = symbol["symbol"].GetString();
 
-                    rapidjson::Value dataObject(rapidjson::kObjectType);
+//                     rapidjson::Value dataObject(rapidjson::kObjectType);
 
-                    if (symbol.HasMember("status") && symbol["status"].IsString())
-                    {
-                        std::string status = symbol["status"].GetString();
-                        dataObject.AddMember("status", rapidjson::Value(status.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                    }
+//                     if (symbol.HasMember("status") && symbol["status"].IsString())
+//                     {
+//                         std::string status = symbol["status"].GetString();
+//                         dataObject.AddMember("status", rapidjson::Value(status.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                     }
 
-                    if (symbol.HasMember("contractType") && symbol["contractType"].IsString())
-                    {
-                        std::string contractType = symbol["contractType"].GetString();
-                        dataObject.AddMember("contractType", rapidjson::Value(contractType.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                    }
+//                     if (symbol.HasMember("contractType") && symbol["contractType"].IsString())
+//                     {
+//                         std::string contractType = symbol["contractType"].GetString();
+//                         dataObject.AddMember("contractType", rapidjson::Value(contractType.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                     }
 
-                    if (symbol.HasMember("filters") && symbol["filters"].IsArray())
-                    {
-                        const rapidjson::Value &filters = symbol["filters"];
+//                     if (symbol.HasMember("filters") && symbol["filters"].IsArray())
+//                     {
+//                         const rapidjson::Value &filters = symbol["filters"];
 
-                        for (rapidjson::SizeType j = 0; j < filters.Size(); j++)
-                        {
-                            const rapidjson::Value &filter = filters[j];
+//                         for (rapidjson::SizeType j = 0; j < filters.Size(); j++)
+//                         {
+//                             const rapidjson::Value &filter = filters[j];
 
-                            if (filter.HasMember("filterType") && filter["filterType"].IsString())
-                            {
-                                std::string filterType = filter["filterType"].GetString();
+//                             if (filter.HasMember("filterType") && filter["filterType"].IsString())
+//                             {
+//                                 std::string filterType = filter["filterType"].GetString();
 
-                                if (filterType == "PRICE_FILTER")
-                                {
-                                    if (filter.HasMember("tickSize") && filter["tickSize"].IsString())
-                                    {
-                                        std::string tickSize = filter["tickSize"].GetString();
-                                        dataObject.AddMember("tickSize", rapidjson::Value(tickSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                                    }
-                                }
-                                else if (filterType == "LOT_SIZE")
-                                {
-                                    if (filter.HasMember("stepSize") && filter["stepSize"].IsString())
-                                    {
-                                        std::string stepSize = filter["stepSize"].GetString();
-                                        dataObject.AddMember("stepSize", rapidjson::Value(stepSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                                    }
-                                }
-                            }
-                        }
-                    }
+//                                 if (filterType == "PRICE_FILTER")
+//                                 {
+//                                     if (filter.HasMember("tickSize") && filter["tickSize"].IsString())
+//                                     {
+//                                         std::string tickSize = filter["tickSize"].GetString();
+//                                         dataObject.AddMember("tickSize", rapidjson::Value(tickSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                                     }
+//                                 }
+//                                 else if (filterType == "LOT_SIZE")
+//                                 {
+//                                     if (filter.HasMember("stepSize") && filter["stepSize"].IsString())
+//                                     {
+//                                         std::string stepSize = filter["stepSize"].GetString();
+//                                         dataObject.AddMember("stepSize", rapidjson::Value(stepSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                                     }
+//                                 }
+//                             }
+//                         }
+//                     }
 
-                    symbolDataMap[symbolName] = dataObject;
-                }
-            }
+//                     symbolDataMap[symbolName] = dataObject;
+//                 }
+//             }
 
-            //  symbolDataMap = std::move(symbolData);
+//             //  symbolDataMap = std::move(symbolData);
 
-            if (consoleLog)
-            {
-                consoleLogger->info("Exchange info retrieved successfully");
-            }
-        }
-    }
+//             if (consoleLog)
+//             {
+//                 consoleLogger->info("Exchange info retrieved successfully");
+//             }
+//         }
+//     }
 
-    else
-    {
-        if (fileLog)
-        {
-            fileLogger->error("Request failed with status code: " + std::to_string(status_code));
-            fileLogger->flush();
-        }
+//     else
+//     {
+//         if (fileLog)
+//         {
+//             fileLogger->error("Request failed with status code: " + std::to_string(status_code));
+//             fileLogger->flush();
+//         }
 
-        if (consoleLog)
-        {
-            consoleLogger->error("Request failed with status code: " + std::to_string(status_code));
-            exit(1);
-        }
-    }
-}
+//         if (consoleLog)
+//         {
+//             consoleLogger->error("Request failed with status code: " + std::to_string(status_code));
+//             exit(1);
+//         }
+//     }
+// }
 void ExchangeInfoClass::getBoostStruct()
 {
 
     boost::asio::io_context io;
     boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23);
     ctx.set_verify_mode(boost::asio::ssl::verify_peer);
-    // ctx.load_verify_file("ca.pem");
+
     ctx.add_verify_path("/etc/ssl/certs");
 
     ctx.set_options(boost::asio::ssl::context::default_workarounds |
@@ -239,22 +238,38 @@ void ExchangeInfoClass::getBoostStruct()
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket> socket(io,
                                                                   ctx);
     boost::asio::ip::tcp::resolver resolver(io);
-    // boost::asio::ip::tcp::socket socket(io);
+
     boost::system::error_code err;
     boost::asio::ip::tcp::resolver::query query(url, "https");
-    std::cout << "1" << std::endl;
+
     auto const results = resolver.resolve(query);
     boost::asio::ip::tcp::resolver::iterator endpoint_iterator = results;
-    // boost::asio::ip::tcp::endpoint connectionEndpoint(endpoint_iterator->address(), 80);
-    std::cout << "2" << std::endl;
+
     boost::asio::ip::tcp::resolver::iterator end;
 
     boost::asio::connect(socket.lowest_layer(), endpoint_iterator, end, err);
     if (!err)
-        std::cout << "connected" << std::endl;
+        if (fileLog)
+        {
+            fileLogger->debug("CONNECTION ESTABLISHED");
+            fileLogger->flush();
+        }
+    if (consoleLog)
+    {
+        consoleLogger->debug("CONNECTION ESTABLISHED ");
+    }
     else
-        std::cout << "not connected" << std::endl;
-    // boost::asio::connect(socket, endpoint_iterator);
+    {
+        if (fileLog)
+        {
+            fileLogger->error("CONNECTION FAILED");
+            fileLogger->flush();
+        }
+        if (consoleLog)
+        {
+            consoleLogger->error("CONNECTION FAILED ");
+        }
+    }
 
     boost::asio::streambuf request;
     socket.handshake(boost::asio::ssl::stream_base::client);
@@ -264,7 +279,7 @@ void ExchangeInfoClass::getBoostStruct()
         request_stream << "GET "
                        << "/fapi/v1/exchangeInfo"
                        << " HTTP/1.1\r\n";
-        // request_stream << "GET " << "/fapi/v1/exchangeInfo" << " HTTPS/1.0\r\n";  // note that you can change it if you wish to HTTP/1.0
+
         request_stream << "Host: " << url << "\r\n";
         request_stream << "Accept: */*\r\n";
         request_stream << "Connection: close\r\n\r\n";
@@ -276,209 +291,215 @@ void ExchangeInfoClass::getBoostStruct()
     boost::system::error_code ec;
     read(socket, response_, ec);
     std::istream response_stream(&response_);
-    // std::cout << &response_ << "\n";
-    //  std::cout << &response_ << "\n";
-    // std::istream response_stream(&response_);
+
     std::string http_version;
     unsigned int status_code;
     response_stream >> http_version >> status_code;
-    std::cout << "Status Code: " << status_code << std::endl;
-    if (status_code == 200)
+    try
     {
-        boost::asio::read_until(socket, response_, "\r\n\r\n");
-        std::string response_body;
-        std::ostringstream response_body_stream;
-        response_body_stream << &response_;
-        response_body = response_body_stream.str();
-
-        // Read the remaining response data as the body
-        size_t content_start = response_body.find("\r\n\r\n") + 4; // Find the start of the content
-        std::string response_content = response_body.substr(content_start);
-        std::cout << "Response Content:\n"
-                  << response_content << std::endl;
-        rapidjson::Document document;
-        document.Parse(response_content.c_str());
-
-        if (!document.HasParseError())
+        if (status_code == 200)
         {
+            boost::asio::read_until(socket, response_, "\r\n\r\n");
+            std::string response_body;
+            std::ostringstream response_body_stream;
+            response_body_stream << &response_;
+            response_body = response_body_stream.str();
 
-            // std::map<std::string, rapidjson::Value> symbolData;
+            size_t content_start = response_body.find("\r\n\r\n");
+            std::string response_content = response_body.substr(content_start);
 
-            const rapidjson::Value &symbols = document["symbols"];
-            if (symbols.IsArray())
+            rapidjson::Document document;
+            document.Parse(response_content.c_str());
+
+            if (!document.HasParseError())
             {
-                for (rapidjson::SizeType i = 0; i < symbols.Size(); i++)
+
+                const rapidjson::Value &symbols = document["symbols"];
+                if (symbols.IsArray())
                 {
-                    const rapidjson::Value &symbol = symbols[i];
-                    SymbolData dataObject;
-                    dataObject.symbolName = symbol["symbol"].GetString();
-
-                    // Create an instance of SymbolData
-
-                    if (symbol.HasMember("status") && symbol["status"].IsString())
+                    for (rapidjson::SizeType i = 0; i < symbols.Size(); i++)
                     {
-                        dataObject.status = symbol["status"].GetString();
-                    }
+                        const rapidjson::Value &symbol = symbols[i];
+                        SymbolData dataObject;
+                        dataObject.symbolName = symbol["symbol"].GetString();
 
-                    if (symbol.HasMember("contractType") && symbol["contractType"].IsString())
-                    {
-                        dataObject.contractType = symbol["contractType"].GetString();
-                    }
-
-                    if (symbol.HasMember("filters") && symbol["filters"].IsArray())
-                    {
-                        const rapidjson::Value &filters = symbol["filters"];
-
-                        for (rapidjson::SizeType j = 0; j < filters.Size(); j++)
+                        if (symbol.HasMember("status") && symbol["status"].IsString())
                         {
-                            const rapidjson::Value &filter = filters[j];
+                            dataObject.status = symbol["status"].GetString();
+                        }
 
-                            if (filter.HasMember("filterType") && filter["filterType"].IsString())
+                        if (symbol.HasMember("contractType") && symbol["contractType"].IsString())
+                        {
+                            dataObject.contractType = symbol["contractType"].GetString();
+                        }
+
+                        if (symbol.HasMember("filters") && symbol["filters"].IsArray())
+                        {
+                            const rapidjson::Value &filters = symbol["filters"];
+
+                            for (rapidjson::SizeType j = 0; j < filters.Size(); j++)
                             {
-                                std::string filterType = filter["filterType"].GetString();
+                                const rapidjson::Value &filter = filters[j];
 
-                                if (filterType == "PRICE_FILTER")
+                                if (filter.HasMember("filterType") && filter["filterType"].IsString())
                                 {
-                                    if (filter.HasMember("tickSize") && filter["tickSize"].IsString())
+                                    std::string filterType = filter["filterType"].GetString();
+
+                                    if (filterType == "PRICE_FILTER")
                                     {
-                                        dataObject.tickSize = filter["tickSize"].GetString();
+                                        if (filter.HasMember("tickSize") && filter["tickSize"].IsString())
+                                        {
+                                            dataObject.tickSize = filter["tickSize"].GetString();
+                                        }
                                     }
-                                }
-                                else if (filterType == "LOT_SIZE")
-                                {
-                                    if (filter.HasMember("stepSize") && filter["stepSize"].IsString())
+                                    else if (filterType == "LOT_SIZE")
                                     {
-                                        dataObject.stepSize = filter["stepSize"].GetString();
+                                        if (filter.HasMember("stepSize") && filter["stepSize"].IsString())
+                                        {
+                                            dataObject.stepSize = filter["stepSize"].GetString();
+                                        }
                                     }
                                 }
                             }
                         }
+
+                        symbolDataVec.push_back(dataObject);
                     }
 
-                    symbolDataList.push_back(dataObject); // Add the SymbolData instance to the vector
-                }
-
-                //  symbolDataMap = std::move(symbolData);
-
-                if (consoleLog)
-                {
-                    consoleLogger->info("Exchange info retrieved successfully");
+                    if (consoleLog)
+                    {
+                        consoleLogger->info("Exchange info retrieved successfully");
+                    }
+                    if (fileLog)
+                    {
+                        fileLogger->info("Exchange info retrieved successfully");
+                    }
                 }
             }
         }
+        else
+        {
+            throw ::std::runtime_error("Request failed with status code: " + std::to_string(status_code));
+            if (fileLog)
+            {
+                fileLogger->error("Request failed with status code: " + std::to_string(status_code));
+                fileLogger->flush();
+            }
+
+            if (consoleLog)
+            {
+                consoleLogger->error("Request failed with status code: " + std::to_string(status_code));
+                exit(1);
+            }
+        }
     }
-    else
+    catch (const char *msg)
     {
-        if (fileLog)
-        {
-            fileLogger->error("Request failed with status code: " + std::to_string(status_code));
-            fileLogger->flush();
-        }
-
-        if (consoleLog)
-        {
-            consoleLogger->error("Request failed with status code: " + std::to_string(status_code));
-            exit(1);
-        }
+        std::cout << msg << std::endl;
     }
 }
-void ExchangeInfoClass::getExchangeInfo()
-{
-    web::http::client::http_client client(U(url));
+// void ExchangeInfoClass::getExchangeInfo()
+// {
+//     web::http::client::http_client client(U(url));
 
-    web::uri_builder builder(U("/fapi/v1/exchangeInfo"));
-    client.request(web::http::methods::GET, builder.to_string())
-        .then([](web::http::http_response response)
-              {
-            if (response.status_code() == web::http::status_codes::OK) {
-                
-                return response.extract_string();
-            } else {
-                throw std::runtime_error("Request failed with status code: " + std::to_string(response.status_code()));
-            } })
-        .then([this](std::string body)
-              {
-            rapidjson::Document document;
-            document.Parse(body.c_str());
+//     web::uri_builder builder(U("/fapi/v1/exchangeInfo"));
+//     client.request(web::http::methods::GET, builder.to_string())
+//         .then([](web::http::http_response response)
+//               {
+//             if (response.status_code() == web::http::status_codes::OK) {
 
-            if (!document.HasParseError()) {
-                
-                //std::map<std::string, rapidjson::Value> symbolData;
+//                 return response.extract_string();
+//             } else {
+//                 throw std::runtime_error("Request failed with status code: " + std::to_string(response.status_code()));
+//             } })
+//         .then([this](std::string body)
+//               {
+//             rapidjson::Document document;
+//             document.Parse(body.c_str());
 
-                const rapidjson::Value& symbols = document["symbols"];
-                if (symbols.IsArray()) {
-                    for (rapidjson::SizeType i = 0; i < symbols.Size(); i++) {
-                        const rapidjson::Value& symbol = symbols[i];
+//             if (!document.HasParseError()) {
 
-                        std::string symbolName = symbol["symbol"].GetString();
+//                 //std::map<std::string, rapidjson::Value> symbolData;
 
-                        rapidjson::Value dataObject(rapidjson::kObjectType);
+//                 const rapidjson::Value& symbols = document["symbols"];
+//                 if (symbols.IsArray()) {
+//                     for (rapidjson::SizeType i = 0; i < symbols.Size(); i++) {
+//                         const rapidjson::Value& symbol = symbols[i];
 
-                        if (symbol.HasMember("status") && symbol["status"].IsString()) {
-                            std::string status = symbol["status"].GetString();
-                            dataObject.AddMember("status", rapidjson::Value(status.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                        }
+//                         std::string symbolName = symbol["symbol"].GetString();
 
-                        if (symbol.HasMember("contractType") && symbol["contractType"].IsString()) {
-                            std::string contractType = symbol["contractType"].GetString();
-                            dataObject.AddMember("contractType", rapidjson::Value(contractType.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                        }
+//                         rapidjson::Value dataObject(rapidjson::kObjectType);
 
-                        if (symbol.HasMember("filters") && symbol["filters"].IsArray()) {
-                            const rapidjson::Value& filters = symbol["filters"];
+//                         if (symbol.HasMember("status") && symbol["status"].IsString()) {
+//                             std::string status = symbol["status"].GetString();
+//                             dataObject.AddMember("status", rapidjson::Value(status.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                         }
 
-                            for (rapidjson::SizeType j = 0; j < filters.Size(); j++) {
-                                const rapidjson::Value& filter = filters[j];
+//                         if (symbol.HasMember("contractType") && symbol["contractType"].IsString()) {
+//                             std::string contractType = symbol["contractType"].GetString();
+//                             dataObject.AddMember("contractType", rapidjson::Value(contractType.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                         }
 
-                                if (filter.HasMember("filterType") && filter["filterType"].IsString()) {
-                                    std::string filterType = filter["filterType"].GetString();
+//                         if (symbol.HasMember("filters") && symbol["filters"].IsArray()) {
+//                             const rapidjson::Value& filters = symbol["filters"];
 
-                                    if (filterType == "PRICE_FILTER") {
-                                        if (filter.HasMember("tickSize") && filter["tickSize"].IsString()) {
-                                            std::string tickSize = filter["tickSize"].GetString();
-                                            dataObject.AddMember("tickSize", rapidjson::Value(tickSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                                        }
-                                    } else if (filterType == "LOT_SIZE") {
-                                        if (filter.HasMember("stepSize") && filter["stepSize"].IsString()) {
-                                            std::string stepSize = filter["stepSize"].GetString();
-                                            dataObject.AddMember("stepSize", rapidjson::Value(stepSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
-                                        }
-                                    }
-                                }
-                            }
-                        }
+//                             for (rapidjson::SizeType j = 0; j < filters.Size(); j++) {
+//                                 const rapidjson::Value& filter = filters[j];
 
-                        symbolDataMap[symbolName] = dataObject;
-                    }
-                }
+//                                 if (filter.HasMember("filterType") && filter["filterType"].IsString()) {
+//                                     std::string filterType = filter["filterType"].GetString();
 
-              //  symbolDataMap = std::move(symbolData);
+//                                     if (filterType == "PRICE_FILTER") {
+//                                         if (filter.HasMember("tickSize") && filter["tickSize"].IsString()) {
+//                                             std::string tickSize = filter["tickSize"].GetString();
+//                                             dataObject.AddMember("tickSize", rapidjson::Value(tickSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                                         }
+//                                     } else if (filterType == "LOT_SIZE") {
+//                                         if (filter.HasMember("stepSize") && filter["stepSize"].IsString()) {
+//                                             std::string stepSize = filter["stepSize"].GetString();
+//                                             dataObject.AddMember("stepSize", rapidjson::Value(stepSize.c_str(), document.GetAllocator()).Move(), document.GetAllocator());
+//                                         }
+//                                     }
+//                                 }
+//                             }
+//                         }
 
-                if (consoleLog) {
-                    consoleLogger->info("Exchange info retrieved successfully");
-                }
-            } 
-            else {
-                if (fileLog) {
-                    fileLogger->error("Failed to parse exchange info JSON");
-                    fileLogger->flush();
-                }
+//                         symbolDataMap[symbolName] = dataObject;
+//                     }
+//                 }
 
-                if (consoleLog) {
-                    consoleLogger->error("Failed to parse exchange info JSON");
-                }
-            } })
-        .wait();
-}
+//               //  symbolDataMap = std::move(symbolData);
+
+//                 if (consoleLog) {
+//                     consoleLogger->info("Exchange info retrieved successfully");
+//                 }
+//             }
+//             else {
+//                 if (fileLog) {
+//                     fileLogger->error("Failed to parse exchange info JSON");
+//                     fileLogger->flush();
+//                 }
+
+//                 if (consoleLog) {
+//                     consoleLogger->error("Failed to parse exchange info JSON");
+//                 }
+//             } })
+//         .wait();
+// }
 void ExchangeInfoClass::readQueryFile()
 {
     std::string prevQueryData;
     std::ifstream inputFile("/CPP-PROJECT/files/queryfile.json");
-
-    if (!inputFile.is_open())
+    try
     {
-        throw std::runtime_error("Failed to open the file.");
-        exit;
+        if (!inputFile.is_open())
+        {
+            throw std::runtime_error("Failed to open the file.");
+        }
+    }
+    catch (const char *msg)
+    {
+        std::cout << msg << std::endl;
     }
 
     inputFile.seekg(0, std::ios::end);
@@ -593,17 +614,33 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value &queryContent)
                 else
                 {
                     prevData[id] = instrumentName;
-                    // ExchangeInfoClass::getData(instrumentName);
                     ExchangeInfoClass::getDataStruct(instrumentName, queryContent);
-                    //  ExchangeInfoClass::getData(instrumentName);
                 }
             }
             else if (queryType == "UPDATE")
             {
+                if (fileLog)
+                {
+                    fileLogger->info("Query type is UPDATE");
+                    fileLogger->flush();
+                }
+                if (consoleLog)
+                {
+                    consoleLogger->debug("Query type is UPDATE");
+                }
                 ExchangeInfoClass::updatetData(queryContent);
             }
             else if (queryType == "DELETE")
             {
+                if (fileLog)
+                {
+                    fileLogger->info("Query type is DELETE");
+                    fileLogger->flush();
+                }
+                if (consoleLog)
+                {
+                    consoleLogger->debug("Query type is DELETE");
+                }
                 ExchangeInfoClass::deleteData(id, instrumentName);
             }
             else
@@ -621,186 +658,192 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value &queryContent)
         }
     }
 }
+
 void ExchangeInfoClass::getDataStruct(const std::string &instrumentName, const rapidjson::Value &queryContent)
 {
-    auto symbolDataIter = std::find_if(symbolDataList.begin(), symbolDataList.end(), [&](const SymbolData &data)
+    auto symbolDataIter = std::find_if(symbolDataVec.begin(), symbolDataVec.end(), [&](const SymbolData &data)
                                        { return data.symbolName == instrumentName; });
-
-    if (symbolDataIter != symbolDataList.end())
+    try
     {
-        const SymbolData &symbolData = *symbolDataIter;
-
-        rapidjson::Document queryDoc;
-        std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
-        if (ansFile.is_open())
+        if (symbolDataIter != symbolDataVec.end())
         {
-            rapidjson::IStreamWrapper ansStreamWrapper(ansFile);
-            queryDoc.ParseStream(ansStreamWrapper);
-            ansFile.close();
-        }
-        else
-        {
-            queryDoc.SetObject();
-        }
+            const SymbolData &symbolData = *symbolDataIter;
 
-        rapidjson::Document::AllocatorType &allocator = queryDoc.GetAllocator();
-
-        if (!queryDoc.HasMember("answers"))
-        {
-            rapidjson::Value answers(rapidjson::kArrayType);
-            queryDoc.AddMember("answers", answers, allocator);
-        }
-
-        rapidjson::Value answersArray = queryDoc["answers"].GetArray();
-
-        rapidjson::Value dataObject(rapidjson::kObjectType);
-
-        // Iterate over the queryContent object and add matching fields from symbolData
-        if (queryContent.HasMember("data") && queryContent["data"].IsArray())
-        {
-            const rapidjson::Value &dataFields = queryContent["data"];
-            for (rapidjson::SizeType i = 0; i < dataFields.Size(); i++)
+            rapidjson::Document queryDoc;
+            std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
+            if (ansFile.is_open())
             {
-                const std::string &fieldName = dataFields[i].GetString();
-                  std::cout<<"fieldname"<<dataFields[i].GetString();
-                if (fieldName == "status" && !symbolData.status.empty())
+                rapidjson::IStreamWrapper ansStreamWrapper(ansFile);
+                queryDoc.ParseStream(ansStreamWrapper);
+                ansFile.close();
+            }
+            else
+            {
+                queryDoc.SetObject();
+            }
+
+            rapidjson::Document::AllocatorType &allocator = queryDoc.GetAllocator();
+
+            if (!queryDoc.HasMember("answers"))
+            {
+                rapidjson::Value answers(rapidjson::kArrayType);
+                queryDoc.AddMember("answers", answers, allocator);
+            }
+
+            rapidjson::Value answersArray = queryDoc["answers"].GetArray();
+
+            rapidjson::Value dataObject(rapidjson::kObjectType);
+
+            if (queryContent.HasMember("data") && queryContent["data"].IsArray())
+            {
+                const rapidjson::Value &dataFields = queryContent["data"];
+                for (rapidjson::SizeType i = 0; i < dataFields.Size(); i++)
                 {
-                    dataObject.AddMember("status", rapidjson::Value(symbolData.status.c_str(), allocator).Move(), allocator);
-                }
-                if (fieldName == "contract_type" && !symbolData.contractType.empty())
-                {
-                    dataObject.AddMember("contract_type", rapidjson::Value(symbolData.contractType.c_str(), allocator).Move(), allocator);
-                }
-                if (fieldName == "ticksize" && !symbolData.tickSize.empty())
-                {
-                    dataObject.AddMember("ticksize", rapidjson::Value(symbolData.tickSize.c_str(), allocator).Move(), allocator);
-                }
-                if (fieldName == "stepsize" )
-                {
-                    dataObject.AddMember("stepsize", rapidjson::Value(symbolData.stepSize.c_str(), allocator).Move(), allocator);
+                    const std::string &fieldName = dataFields[i].GetString();
+
+                    if (fieldName == "status" && !symbolData.status.empty())
+                    {
+                        dataObject.AddMember("status", rapidjson::Value(symbolData.status.c_str(), allocator).Move(), allocator);
+                    }
+                    else if (fieldName == "contract_type" && !symbolData.contractType.empty())
+                    {
+                        dataObject.AddMember("contract_type", rapidjson::Value(symbolData.contractType.c_str(), allocator).Move(), allocator);
+                    }
+                    else if (fieldName == "ticksize" && !symbolData.tickSize.empty())
+                    {
+                        dataObject.AddMember("ticksize", rapidjson::Value(symbolData.tickSize.c_str(), allocator).Move(), allocator);
+                    }
+                    else if (fieldName == "stepsize")
+                    {
+                        dataObject.AddMember("stepsize", rapidjson::Value(symbolData.stepSize.c_str(), allocator).Move(), allocator);
+                    }
                 }
             }
-        }
 
-        rapidjson::Value result(rapidjson::kObjectType);
-        std::string str = std::to_string(id);
-        result.AddMember("ID", rapidjson::Value(str.c_str(), allocator).Move(), allocator);
-        result.AddMember("symbol", rapidjson::Value(instrumentName.c_str(), allocator).Move(), allocator);
-        result.AddMember("data", dataObject, allocator);
+            rapidjson::Value result(rapidjson::kObjectType);
+            std::string str = std::to_string(id);
+            result.AddMember("ID", rapidjson::Value(str.c_str(), allocator).Move(), allocator);
+            result.AddMember("symbol", rapidjson::Value(instrumentName.c_str(), allocator).Move(), allocator);
+            result.AddMember("data", dataObject, allocator);
 
-        answersArray.PushBack(result, allocator);
+            answersArray.PushBack(result, allocator);
 
-        queryDoc["answers"] = answersArray;
+            queryDoc["answers"] = answersArray;
 
-        std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
-        if (!ansFileWrite.is_open())
-        {
-            if (fileLog)
+            std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
+            if (!ansFileWrite.is_open())
             {
-                fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-                fileLogger->flush();
+                if (fileLog)
+                {
+                    fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+                    fileLogger->flush();
+                }
+
+                if (consoleLog)
+                {
+                    consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+                }
+                throw std::runtime_error("CANNOT OPEN FILE");
             }
+
+            rapidjson::OStreamWrapper answersStreamWrapper(ansFileWrite);
+            rapidjson::PrettyWriter<rapidjson::OStreamWrapper> answersWriter(answersStreamWrapper);
+            queryDoc.Accept(answersWriter);
+
+            ansFileWrite.close();
 
             if (consoleLog)
             {
-                consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+                consoleLogger->debug("Data written to the file successfully");
             }
-            throw std::runtime_error("CANNOT OPEN FILE");
-        }
-
-        rapidjson::OStreamWrapper answersStreamWrapper(ansFileWrite);
-        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> answersWriter(answersStreamWrapper);
-        queryDoc.Accept(answersWriter);
-
-        ansFileWrite.close();
-
-        if (consoleLog)
-        {
-            consoleLogger->debug("Data written to the file successfully");
-        }
-    }
-    else
-    {
-        throw std::runtime_error("Symbol not found.");
-    }
-}
-
-void ExchangeInfoClass::getData(const std::string &instrumentName)
-{
-
-    if (symbolDataMap.find(instrumentName) != symbolDataMap.end())
-    {
-        // const rapidjson::Value &symbolData = symbolDataMap[instrumentName]; //rapidjson::Value dataObject(symbolDataMap[instrumentName], allocator);
-
-        rapidjson::Document queryDoc;
-        std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
-        if (ansFile.is_open())
-        {
-            rapidjson::IStreamWrapper ansStreamWrapper(ansFile);
-            queryDoc.ParseStream(ansStreamWrapper);
-            ansFile.close();
         }
         else
         {
-            queryDoc.SetObject();
-        }
-
-        rapidjson::Document::AllocatorType &allocator = queryDoc.GetAllocator();
-
-        if (!queryDoc.HasMember("answers"))
-        {
-            rapidjson::Value answers(rapidjson::kArrayType);
-            queryDoc.AddMember("answers", answers, allocator);
-        }
-
-        rapidjson::Value answersArray = queryDoc["answers"].GetArray();
-
-        rapidjson::Value dataObject(symbolDataMap[instrumentName], allocator);
-
-        rapidjson::Value result(rapidjson::kObjectType);
-        std::string str = std::to_string(id);
-        rapidjson::Value strId(str.c_str(), str.size(), allocator);
-        result.AddMember("ID", rapidjson::Value(strId, allocator).Move(), allocator);
-        result.AddMember("symbol", rapidjson::Value(instrumentName.c_str(), allocator).Move(), allocator);
-        result.AddMember("data", dataObject, allocator); //
-        // result.AddMember("data", dataObject, allocator);
-
-        answersArray.PushBack(result, allocator);
-
-        queryDoc["answers"] = answersArray;
-
-        std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
-        if (!ansFileWrite.is_open())
-        {
-            if (fileLog)
-            {
-                fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-                fileLogger->flush();
-            }
-
-            if (consoleLog)
-            {
-                consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-            }
-            throw std::runtime_error("CANNOT OPEN FILE");
-        }
-
-        rapidjson::OStreamWrapper answersStreamWrapper(ansFileWrite);
-        rapidjson::PrettyWriter<rapidjson::OStreamWrapper> answersWriter(answersStreamWrapper);
-        queryDoc.Accept(answersWriter);
-
-        ansFileWrite.close();
-
-        if (consoleLog)
-        {
-            consoleLogger->debug("Data written in file successfully");
+            throw std::runtime_error("Symbol not found.");
         }
     }
-    else
+    catch (std::exception &e)
     {
-        throw std::runtime_error("Symbol not found.");
+        std::cout << "Caught exception: " << e.what() << "\n";
     }
 }
+
+// void ExchangeInfoClass::getData(const std::string &instrumentName)
+// {
+
+//     if (symbolDataMap.find(instrumentName) != symbolDataMap.end())
+//     {
+//         // const rapidjson::Value &symbolData = symbolDataMap[instrumentName]; //rapidjson::Value dataObject(symbolDataMap[instrumentName], allocator);
+
+//         rapidjson::Document queryDoc;
+//         std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
+//         if (ansFile.is_open())
+//         {
+//             rapidjson::IStreamWrapper ansStreamWrapper(ansFile);
+//             queryDoc.ParseStream(ansStreamWrapper);
+//             ansFile.close();
+//         }
+//         else
+//         {
+//             queryDoc.SetObject();
+//         }
+
+//         rapidjson::Document::AllocatorType &allocator = queryDoc.GetAllocator();
+
+//         if (!queryDoc.HasMember("answers"))
+//         {
+//             rapidjson::Value answers(rapidjson::kArrayType);
+//             queryDoc.AddMember("answers", answers, allocator);
+//         }
+
+//         rapidjson::Value answersArray = queryDoc["answers"].GetArray();
+
+//         rapidjson::Value dataObject(symbolDataMap[instrumentName], allocator);
+
+//         rapidjson::Value result(rapidjson::kObjectType);
+//         std::string str = std::to_string(id);
+//         rapidjson::Value strId(str.c_str(), str.size(), allocator);
+//         result.AddMember("ID", rapidjson::Value(strId, allocator).Move(), allocator);
+//         result.AddMember("symbol", rapidjson::Value(instrumentName.c_str(), allocator).Move(), allocator);
+//         result.AddMember("data", dataObject, allocator); //
+//         // result.AddMember("data", dataObject, allocator);
+
+//         answersArray.PushBack(result, allocator);
+
+//         queryDoc["answers"] = answersArray;
+
+//         std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
+//         if (!ansFileWrite.is_open())
+//         {
+//             if (fileLog)
+//             {
+//                 fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+//                 fileLogger->flush();
+//             }
+
+//             if (consoleLog)
+//             {
+//                 consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+//             }
+//             throw std::runtime_error("CANNOT OPEN FILE");
+//         }
+
+//         rapidjson::OStreamWrapper answersStreamWrapper(ansFileWrite);
+//         rapidjson::PrettyWriter<rapidjson::OStreamWrapper> answersWriter(answersStreamWrapper);
+//         queryDoc.Accept(answersWriter);
+
+//         ansFileWrite.close();
+
+//         if (consoleLog)
+//         {
+//             consoleLogger->debug("Data written in file successfully");
+//         }
+//     }
+//     else
+//     {
+//         throw std::runtime_error("Symbol not found.");
+//     }
+// }
 
 void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
 {
@@ -912,7 +955,7 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
     {
         int id = queryObject["id"].GetInt();
         std::string instrumentName = queryObject["instrument_name"].GetString();
-        const rapidjson::Value &newData = queryObject["data"];
+         const rapidjson::Value &newData = queryObject["data"];
 
         std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
 
@@ -971,10 +1014,24 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
 
                         if (std::stoi(ansID) == id && ansSymbol == instrumentName)
                         {
+                            if (answerObject.HasMember("data") && answerObject["data"].IsObject())
+                            {
+                                rapidjson::Value &dataObject = answerObject["data"];
+                                for (auto it = newData.MemberBegin(); it != newData.MemberEnd(); ++it)
+                                {
+                                    std::cout<<"feild check= "<<dataObject[it->name].GetString()<<std::endl;
+                                    if (dataObject.HasMember(it->name))
+                                    {
+                                       dataObject[it->name].CopyFrom(it->value, answerDoc.GetAllocator());
+                                        //dataObject[it->name] = it->value;
+                                    }
+                                }
+                            }
 
-                            rapidjson::Value newDataValue(newData, answerDoc.GetAllocator());
-                            answerObject.RemoveMember("data");
-                            answerObject.AddMember("data", newDataValue, answerDoc.GetAllocator());
+                            //     rapidjson::Value newDataValue(newData, answerDoc.GetAllocator());
+
+                            //    answerObject.RemoveMember("data");
+                            //     answerObject.AddMember("data", newDataValue, answerDoc.GetAllocator());
                         }
                     }
                 }
@@ -1030,3 +1087,37 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
         }
     }
 }
+
+// response HTTP/1.1 200 OK
+// Date: Wed, 07 Jun 2023 04:27:20 GMT
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 635
+// Connection: close
+// ETag: W/"27b-DGruAYV3WE+UCzdr4yP9DROzxvQ"
+// set-cookie: sails.sid=s%3AfAWQalL4smjcrnpCGEy64ZOM_pwIBtiC.nNtSodbaoN4qdw1ukJbu3kIK4Ym5RjEl5%2BYGZYxuAhw; Path=/; HttpOnly
+
+// {
+//   "args": {},
+//   "data": "",
+//   "files": {},
+//   "form": {
+//     "name": "blabla",
+//     "password": "bloblo"
+//   },
+//   "headers": {
+//     "x-forwarded-proto": "https",
+//     "x-forwarded-port": "443",
+//     "host": "postman-echo.com",
+//     "x-amzn-trace-id": "Root=1-64800728-6f6f7ea414c6d2e7628f60bb",
+//     "content-length": "27",
+//     "accept": "*/*",
+//     "auth": "c3RhdGljIGNvbnN0IHN0ZDo6c3RyaW5nIGF1dGhvcml6YXRpb25fdG9rZW4gPSAiQXV0aDogIjsK",
+//     "user-agent": "demo program 0.01",
+//     "content-type": "application/x-www-form-urlencoded"
+//   },
+//   "json": {
+//     "name": "blabla",
+//     "password": "bloblo"
+//   },
+//   "url": "https://postman-echo.com/post"
+// }
