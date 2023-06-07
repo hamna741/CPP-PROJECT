@@ -662,22 +662,22 @@ void ExchangeInfoClass::getDataStruct(const std::string &instrumentName, const r
             for (rapidjson::SizeType i = 0; i < dataFields.Size(); i++)
             {
                 const std::string &fieldName = dataFields[i].GetString();
-
+                  std::cout<<"fieldname"<<dataFields[i].GetString();
                 if (fieldName == "status" && !symbolData.status.empty())
                 {
-                    dataObject.AddMember(rapidjson::StringRef(fieldName.c_str()), rapidjson::Value(symbolData.status.c_str(), allocator).Move(), allocator);
+                    dataObject.AddMember("status", rapidjson::Value(symbolData.status.c_str(), allocator).Move(), allocator);
                 }
-                if (fieldName == "contractType" && !symbolData.contractType.empty())
+                if (fieldName == "contract_type" && !symbolData.contractType.empty())
                 {
-                    dataObject.AddMember(rapidjson::StringRef(fieldName.c_str()), rapidjson::Value(symbolData.contractType.c_str(), allocator).Move(), allocator);
+                    dataObject.AddMember("contract_type", rapidjson::Value(symbolData.contractType.c_str(), allocator).Move(), allocator);
                 }
-                if (fieldName == "tickSize" && !symbolData.tickSize.empty())
+                if (fieldName == "ticksize" && !symbolData.tickSize.empty())
                 {
-                    dataObject.AddMember(rapidjson::StringRef(fieldName.c_str()), rapidjson::Value(symbolData.tickSize.c_str(), allocator).Move(), allocator);
+                    dataObject.AddMember("ticksize", rapidjson::Value(symbolData.tickSize.c_str(), allocator).Move(), allocator);
                 }
-                if (fieldName == "stepSize" && !symbolData.stepSize.empty())
+                if (fieldName == "stepsize" )
                 {
-                    dataObject.AddMember(rapidjson::StringRef(fieldName.c_str()), rapidjson::Value(symbolData.stepSize.c_str(), allocator).Move(), allocator);
+                    dataObject.AddMember("stepsize", rapidjson::Value(symbolData.stepSize.c_str(), allocator).Move(), allocator);
                 }
             }
         }
