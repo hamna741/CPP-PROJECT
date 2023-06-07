@@ -86,7 +86,7 @@ using boost::asio::ip::tcp;
 class ExchangeInfoClass
 {
 private:
-    std::map<std::string, rapidjson::Value> symbolDataMap;
+  //  std::map<std::string, rapidjson::Value> symbolDataMap;
     struct SymbolData {
     std::string symbolName;
     std::string status;
@@ -95,7 +95,7 @@ private:
     std::string stepSize;
 };
     int id;
-     std::vector<SymbolData> symbolDataList;
+     std::vector<SymbolData> symbolDataVec;
     std::string instrumentName;
     bool fileLog, consoleLog;
     std::string url;
@@ -106,15 +106,16 @@ private:
 public:
     //  ExchangeInfoClass();
     int configFunc();
-    void getExchangeInfo();
+    // void getExchangeInfo();
     void readQueryFile();
     void queryCheck(const rapidjson::Value &queryContent);
     void deleteData(int id, std::string instrumentName);
-    void getData(const std::string &instrumentName);
+    // void getData(const std::string &instrumentName);
     void updatetData(const rapidjson::Value &queryObject);
-    void getBoostExchangeInfo();
+    // void getBoostExchangeInfo();
     void getBoostStruct();
     void getDataStruct(const std::string& instrumentName, const rapidjson::Value& queryContent);
+
 };
 
 #endif // EXCHANGE_INFO_H
