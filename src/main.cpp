@@ -1,4 +1,4 @@
-#include <iostream>
+
 #include "exchangeInfo.h"
 
 ExchangeInfoClass info;
@@ -21,27 +21,15 @@ int main()
 
 
     int interval = info.configFunc();
-    //  while (true)
-    // {
-    //     info.getBoostStruct();
-    //     std::this_thread::sleep_for(std::chrono::seconds(interval));
-    // }
-      std::thread reloadThread(reloadData,interval);
-    //  helper.detach();
-   // helper.join();
-    // info.getBoostStruct();
-//  auto exec_run = [](){ while (true) info.getBoostStruct(); };
-//     std::thread t(exec_run);
-//     t.join();
-sleep(interval+5);
-// std::cout<<"waited";
-std::thread queryThread(readQuery);
-       queryThread.join();
-    // info.getExchangeInfo();
+  
+      std::thread reloadThread(reloadData,interval);///////////////////
 
-  //   info.readQueryFile();
-    //  info.getData();
-    // info.foo();
+sleep(interval+5);                 //////////////////////
+
+std::thread queryThread(readQuery);/////////////////
+       queryThread.join();////////////////
+
+
 
     return 0;
 }
