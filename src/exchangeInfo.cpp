@@ -1,5 +1,54 @@
 #include "exchangeInfo.h"
 
+void ExchangeInfoClass::setContractType(std::string CType)
+{
+    dataObject.contractType = CType;
+}
+
+void ExchangeInfoClass::setstatus(std::string stat)
+{
+    dataObject.status = stat;
+}
+
+void ExchangeInfoClass::setStepSize(std::string SSize)
+{
+    dataObject.stepSize = SSize;
+}
+
+void ExchangeInfoClass::setTicksize(std::string TSize)
+{
+    dataObject.tickSize = TSize;
+}
+
+void ExchangeInfoClass::setSymbolName(std::string symName)
+{
+    dataObject.symbolName = symName;
+}
+
+std::string ExchangeInfoClass::getContractType()
+{
+    return dataObject.contractType;
+}
+
+std::string ExchangeInfoClass::getStatus()
+{
+    return dataObject.status;
+}
+
+std::string ExchangeInfoClass::getStepSize()
+{
+    return dataObject.stepSize;
+}
+
+std::string ExchangeInfoClass::getTickSize()
+{
+    return dataObject.tickSize;
+}
+
+std::string ExchangeInfoClass::getSymbolName()
+{
+    return dataObject.symbolName;
+}
 int ExchangeInfoClass::configFunc()
 {
     std::string logLevel;
@@ -36,7 +85,7 @@ int ExchangeInfoClass::configFunc()
             if (fileLog)
             {
 
-                fileLogger = spdlog::basic_logger_mt("file_logger", "/CPP-PROJECT/build/log_file.txt");
+                fileLogger = spdlog::basic_logger_mt("file_logger", "/CPP-PROJECT/files/log_file.txt");
                 spdlog::set_default_logger(fileLogger);
             }
         }
@@ -320,17 +369,17 @@ void ExchangeInfoClass::getBoostStruct()
                     for (rapidjson::SizeType i = 0; i < symbols.Size(); i++)
                     {
                         const rapidjson::Value &symbol = symbols[i];
-                        SymbolData dataObject;
-                        dataObject.symbolName = symbol["symbol"].GetString();
+                        // SymbolData dataObject;
+                        ExchangeInfoClass::setSymbolName(symbol["symbol"].GetString());
 
                         if (symbol.HasMember("status") && symbol["status"].IsString())
                         {
-                            dataObject.status = symbol["status"].GetString();
+                            ExchangeInfoClass::setstatus(symbol["status"].GetString());
                         }
 
                         if (symbol.HasMember("contractType") && symbol["contractType"].IsString())
                         {
-                            dataObject.contractType = symbol["contractType"].GetString();
+                            ExchangeInfoClass::setContractType(symbol["contractType"].GetString());
                         }
 
                         if (symbol.HasMember("filters") && symbol["filters"].IsArray())
@@ -349,14 +398,14 @@ void ExchangeInfoClass::getBoostStruct()
                                     {
                                         if (filter.HasMember("tickSize") && filter["tickSize"].IsString())
                                         {
-                                            dataObject.tickSize = filter["tickSize"].GetString();
+                                            ExchangeInfoClass::setTicksize(filter["tickSize"].GetString());
                                         }
                                     }
                                     else if (filterType == "LOT_SIZE")
                                     {
                                         if (filter.HasMember("stepSize") && filter["stepSize"].IsString())
                                         {
-                                            dataObject.stepSize = filter["stepSize"].GetString();
+                                            ExchangeInfoClass::setStepSize(filter["stepSize"].GetString());
                                         }
                                     }
                                 }
@@ -571,6 +620,7 @@ void ExchangeInfoClass::readQueryFile()
 
 void ExchangeInfoClass::queryCheck(const rapidjson::Value &queryContent)
 {
+    int id;
     if (queryContent.IsObject())
     {
         if (queryContent.HasMember("id") && queryContent["id"].IsInt())
@@ -661,13 +711,15 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value &queryContent)
 
 void ExchangeInfoClass::getDataStruct(const std::string &instrumentName, const rapidjson::Value &queryContent)
 {
+
+
     auto symbolDataIter = std::find_if(symbolDataVec.begin(), symbolDataVec.end(), [&](const SymbolData &data)
                                        { return data.symbolName == instrumentName; });
     try
     {
         if (symbolDataIter != symbolDataVec.end())
         {
-            const SymbolData &symbolData = *symbolDataIter;
+        
 
             rapidjson::Document queryDoc;
             std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
@@ -693,7 +745,7 @@ void ExchangeInfoClass::getDataStruct(const std::string &instrumentName, const r
             rapidjson::Value answersArray = queryDoc["answers"].GetArray();
 
             rapidjson::Value dataObject(rapidjson::kObjectType);
-
+            int Nid = queryContent["id"].GetInt();
             if (queryContent.HasMember("data") && queryContent["data"].IsArray())
             {
                 const rapidjson::Value &dataFields = queryContent["data"];
@@ -701,27 +753,27 @@ void ExchangeInfoClass::getDataStruct(const std::string &instrumentName, const r
                 {
                     const std::string &fieldName = dataFields[i].GetString();
 
-                    if (fieldName == "status" && !symbolData.status.empty())
+                    if (fieldName == "status" && !ExchangeInfoClass::getStatus().empty())
                     {
-                        dataObject.AddMember("status", rapidjson::Value(symbolData.status.c_str(), allocator).Move(), allocator);
+                        dataObject.AddMember("status", rapidjson::Value(ExchangeInfoClass::getStatus().c_str(), allocator).Move(), allocator);
                     }
-                    else if (fieldName == "contract_type" && !symbolData.contractType.empty())
+                    else if (fieldName == "contract_type" && !ExchangeInfoClass::getContractType().empty())
                     {
-                        dataObject.AddMember("contract_type", rapidjson::Value(symbolData.contractType.c_str(), allocator).Move(), allocator);
+                        dataObject.AddMember("contract_type", rapidjson::Value(ExchangeInfoClass::getContractType().c_str(), allocator).Move(), allocator);
                     }
-                    else if (fieldName == "ticksize" && !symbolData.tickSize.empty())
+                    else if (fieldName == "ticksize" && !ExchangeInfoClass::getTickSize().empty())
                     {
-                        dataObject.AddMember("ticksize", rapidjson::Value(symbolData.tickSize.c_str(), allocator).Move(), allocator);
+                        dataObject.AddMember("ticksize", rapidjson::Value(ExchangeInfoClass::getTickSize().c_str(), allocator).Move(), allocator);
                     }
                     else if (fieldName == "stepsize")
                     {
-                        dataObject.AddMember("stepsize", rapidjson::Value(symbolData.stepSize.c_str(), allocator).Move(), allocator);
+                        dataObject.AddMember("stepsize", rapidjson::Value(ExchangeInfoClass::getStepSize().c_str(), allocator).Move(), allocator);
                     }
                 }
             }
 
             rapidjson::Value result(rapidjson::kObjectType);
-            std::string str = std::to_string(id);
+            std::string str = std::to_string(Nid);
             result.AddMember("ID", rapidjson::Value(str.c_str(), allocator).Move(), allocator);
             result.AddMember("symbol", rapidjson::Value(instrumentName.c_str(), allocator).Move(), allocator);
             result.AddMember("data", dataObject, allocator);
@@ -955,7 +1007,7 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
     {
         int id = queryObject["id"].GetInt();
         std::string instrumentName = queryObject["instrument_name"].GetString();
-         const rapidjson::Value &newData = queryObject["data"];
+        const rapidjson::Value &newData = queryObject["data"];
 
         std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
 
@@ -1019,11 +1071,11 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
                                 rapidjson::Value &dataObject = answerObject["data"];
                                 for (auto it = newData.MemberBegin(); it != newData.MemberEnd(); ++it)
                                 {
-                                    std::cout<<"feild check= "<<dataObject[it->name].GetString()<<std::endl;
+
                                     if (dataObject.HasMember(it->name))
                                     {
-                                       dataObject[it->name].CopyFrom(it->value, answerDoc.GetAllocator());
-                                        //dataObject[it->name] = it->value;
+                                        dataObject[it->name].CopyFrom(it->value, answerDoc.GetAllocator());
+                                        // dataObject[it->name] = it->value;
                                     }
                                 }
                             }
@@ -1087,37 +1139,3 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
         }
     }
 }
-
-// response HTTP/1.1 200 OK
-// Date: Wed, 07 Jun 2023 04:27:20 GMT
-// Content-Type: application/json; charset=utf-8
-// Content-Length: 635
-// Connection: close
-// ETag: W/"27b-DGruAYV3WE+UCzdr4yP9DROzxvQ"
-// set-cookie: sails.sid=s%3AfAWQalL4smjcrnpCGEy64ZOM_pwIBtiC.nNtSodbaoN4qdw1ukJbu3kIK4Ym5RjEl5%2BYGZYxuAhw; Path=/; HttpOnly
-
-// {
-//   "args": {},
-//   "data": "",
-//   "files": {},
-//   "form": {
-//     "name": "blabla",
-//     "password": "bloblo"
-//   },
-//   "headers": {
-//     "x-forwarded-proto": "https",
-//     "x-forwarded-port": "443",
-//     "host": "postman-echo.com",
-//     "x-amzn-trace-id": "Root=1-64800728-6f6f7ea414c6d2e7628f60bb",
-//     "content-length": "27",
-//     "accept": "*/*",
-//     "auth": "c3RhdGljIGNvbnN0IHN0ZDo6c3RyaW5nIGF1dGhvcml6YXRpb25fdG9rZW4gPSAiQXV0aDogIjsK",
-//     "user-agent": "demo program 0.01",
-//     "content-type": "application/x-www-form-urlencoded"
-//   },
-//   "json": {
-//     "name": "blabla",
-//     "password": "bloblo"
-//   },
-//   "url": "https://postman-echo.com/post"
-// }
