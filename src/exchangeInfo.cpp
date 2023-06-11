@@ -98,7 +98,7 @@ int ExchangeInfoClass::configFunc()
         {
             consoleLog = loggingConfig["console"].GetBool();
             consoleLogger = spdlog::stdout_color_mt("console");
-             spdlog::set_default_logger(consoleLogger);
+            spdlog::set_default_logger(consoleLogger);
             if (consoleLog)
             {
                 consoleLogger->set_level(spdlog::level::from_str(logLevel));
@@ -146,21 +146,22 @@ void ExchangeInfoClass::getExchangeInfo()
     boost::asio::ip::tcp::resolver::iterator end;
 
     boost::asio::connect(socket.lowest_layer(), endpoint_iterator, end, err);
-    if (!err){
-        
-            fileLogger->debug("CONNECTION ESTABLISHED");
-            fileLogger->flush();
-   
-        consoleLogger->debug("CONNECTION ESTABLISHED ");}
-  
+    if (!err)
+    {
+
+        fileLogger->debug("CONNECTION ESTABLISHED");
+        fileLogger->flush();
+
+        consoleLogger->debug("CONNECTION ESTABLISHED ");
+    }
+
     else
     {
-       
-            fileLogger->error("CONNECTION FAILED");
-            fileLogger->flush();
-      
-            consoleLogger->error("CONNECTION FAILED ");
-  
+
+        fileLogger->error("CONNECTION FAILED");
+        fileLogger->flush();
+
+        consoleLogger->error("CONNECTION FAILED ");
     }
 
     boost::asio::streambuf request;
@@ -258,24 +259,21 @@ void ExchangeInfoClass::getExchangeInfo()
                         symbolDataVec.push_back(dataObject);
                     }
 
-                  
-                        consoleLogger->info("Exchange info retrieved successfully");
-                   
-                        fileLogger->info("Exchange info retrieved successfully");
-                 
+                    consoleLogger->info("Exchange info retrieved successfully");
+
+                    fileLogger->info("Exchange info retrieved successfully");
                 }
             }
         }
         else
         {
             throw ::std::runtime_error("Request failed with status code: " + std::to_string(status_code));
-            
-                fileLogger->error("Request failed with status code: " + std::to_string(status_code));
-                fileLogger->flush();
-         
-                consoleLogger->error("Request failed with status code: " + std::to_string(status_code));
-                exit(1);
-         
+
+            fileLogger->error("Request failed with status code: " + std::to_string(status_code));
+            fileLogger->flush();
+
+            consoleLogger->error("Request failed with status code: " + std::to_string(status_code));
+            exit(1);
         }
     }
     catch (const char *msg)
@@ -315,10 +313,10 @@ void ExchangeInfoClass::readQueryFile()
         if (!inputFile.is_open())
         {
             throw std::runtime_error("Failed to open the file.");
-          
-                fileLogger->error("failed to open query.json file");
-          
-                fileLogger->error("failed to open query.json file");
+
+            fileLogger->error("failed to open query.json file");
+
+            fileLogger->error("failed to open query.json file");
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
@@ -354,10 +352,10 @@ void ExchangeInfoClass::readQueryFile()
             else
             {
                 throw std::runtime_error("Failed to parse the JSON data.");
-           
-                    fileLogger->error("failed to parse JSON data");
-               
-                    fileLogger->error("failed to parse JSON data");
+
+                fileLogger->error("failed to parse JSON data");
+
+                fileLogger->error("failed to parse JSON data");
             }
 
             prevQueryData = newData;
@@ -388,21 +386,19 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value &queryContent)
 
             if (queryType == "GET")
             {
-           
-                    fileLogger->info("Query type is GET");
-                    fileLogger->flush();
-             
-                    consoleLogger->debug("Query type is GET");
-           
+
+                fileLogger->info("Query type is GET");
+                fileLogger->flush();
+
+                consoleLogger->debug("Query type is GET");
 
                 if (prevData[id] == instrumentName)
                 {
-                
-                        fileLogger->info("Request repeated");
-                        fileLogger->flush();
-                   
-                        consoleLogger->debug("Request repeated");
-              
+
+                    fileLogger->info("Request repeated");
+                    fileLogger->flush();
+
+                    consoleLogger->debug("Request repeated");
                 }
                 else
                 {
@@ -412,31 +408,29 @@ void ExchangeInfoClass::queryCheck(const rapidjson::Value &queryContent)
             }
             else if (queryType == "UPDATE")
             {
-               
-                    fileLogger->info("Query type is UPDATE");
-                    fileLogger->flush();
-            
-                    consoleLogger->debug("Query type is UPDATE");
-        
+
+                fileLogger->info("Query type is UPDATE");
+                fileLogger->flush();
+
+                consoleLogger->debug("Query type is UPDATE");
+
                 ExchangeInfoClass::updatetData(queryContent);
             }
             else if (queryType == "DELETE")
             {
-               
-                    fileLogger->info("Query type is DELETE");
-                    fileLogger->flush();
-            
-            
+
+                fileLogger->info("Query type is DELETE");
+                fileLogger->flush();
+
                 ExchangeInfoClass::deleteData(id, instrumentName);
             }
             else
             {
-             
-                    fileLogger->error("Unknown query type: " + queryType);
-                    fileLogger->flush();
-           
-                    consoleLogger->error("Unknown query type: " + queryType);
-                
+
+                fileLogger->error("Unknown query type: " + queryType);
+                fileLogger->flush();
+
+                consoleLogger->error("Unknown query type: " + queryType);
             }
         }
     }
@@ -523,14 +517,12 @@ void ExchangeInfoClass::getData(const std::string &instrumentName, const rapidjs
             std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
             if (!ansFileWrite.is_open())
             {
-              
-                    fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-                    fileLogger->flush();
-           
 
-              
-                    consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-              
+                fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+                fileLogger->flush();
+
+                consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+
                 throw std::runtime_error("CANNOT OPEN FILE");
             }
 
@@ -540,9 +532,7 @@ void ExchangeInfoClass::getData(const std::string &instrumentName, const rapidjs
 
             ansFileWrite.close();
 
-         
-                consoleLogger->debug("Data written to the file successfully");
-       
+            consoleLogger->debug("Data written to the file successfully");
         }
         else
         {
@@ -561,12 +551,12 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
     std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
     if (!ansFile.is_open())
     {
-   
-            fileLogger->error("ENCOUNTERED ERROR WHILE OPEING answers.json FILE");
-            fileLogger->flush();
-      
-            consoleLogger->error("ENCOUNTERED ERROR WHILE OPEING answers.json FILE");
-    
+
+        fileLogger->error("ENCOUNTERED ERROR WHILE OPEING answers.json FILE");
+        fileLogger->flush();
+
+        consoleLogger->error("ENCOUNTERED ERROR WHILE OPEING answers.json FILE");
+
         exit(1);
     }
 
@@ -578,14 +568,12 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
 
     if (answerDoc.HasParseError())
     {
-      
-            fileLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
-            fileLogger->flush();
-       
 
-     
-            consoleLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
-   
+        fileLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+        fileLogger->flush();
+
+        consoleLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+
         exit(1);
     }
 
@@ -609,9 +597,8 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
                     if (std::stoi(ansID) == id && ansSymbol == instrumentName)
                     {
 
-                   
-                            consoleLogger->debug("deleting data");
-                     
+                        consoleLogger->debug("deleting data");
+
                         answersArray.Erase(answersArray.Begin() + index);
                     }
                     else
@@ -632,14 +619,12 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
     std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
     if (!ansFileWrite.is_open())
     {
-     
-            fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-            fileLogger->flush();
 
+        fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+        fileLogger->flush();
 
- 
-            consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-   
+        consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+
         exit(1);
     }
 
@@ -662,12 +647,12 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
 
         if (!ansFile.is_open())
         {
-        
-                fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-                fileLogger->flush();
-   
-                consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-  
+
+            fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+            fileLogger->flush();
+
+            consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+
             exit(1);
         }
 
@@ -679,15 +664,14 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
 
         if (answerDoc.HasParseError())
         {
-          
-                fileLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
-                fileLogger->flush();
-      
-                consoleLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
-     
+
+            fileLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+            fileLogger->flush();
+
+            consoleLogger->error("ENCOUNTERED ERROR WHILE PARSING DATA");
+
             exit(1);
         }
-
         if (answerDoc.IsObject() && answerDoc.HasMember("answers"))
         {
             rapidjson::Value &answersArray = answerDoc["answers"];
@@ -710,13 +694,13 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
                             if (answerObject.HasMember("data") && answerObject["data"].IsObject())
                             {
                                 rapidjson::Value &dataObject = answerObject["data"];
+
                                 for (auto it = newData.MemberBegin(); it != newData.MemberEnd(); ++it)
                                 {
-
-                                    if (dataObject.HasMember(it->name))
+                                    
+                                    if (dataObject.HasMember( it->name.GetString()))
                                     {
-                                        dataObject[it->name].CopyFrom(it->value, answerDoc.GetAllocator());
-                                        // dataObject[it->name] = it->value;
+                                        dataObject[ it->name.GetString()].CopyFrom(it->value, answerDoc.GetAllocator());
                                     }
                                 }
                             }
@@ -736,14 +720,12 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
         std::ofstream ansFileWrite("/CPP-PROJECT/files/answers.json");
         if (!ansFileWrite.is_open())
         {
-         
-                fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-                fileLogger->flush();
-     
 
-       
-                consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
-    
+            fileLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+            fileLogger->flush();
+
+            consoleLogger->error("ENCOUNTERED ERROR WHILE OPENING answers.json FILE");
+
             exit(1);
         }
 
@@ -753,21 +735,18 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
 
         ansFileWrite.close();
 
-     
-            fileLogger->info("data updated in file");
-            fileLogger->flush();
-    
-            consoleLogger->info("data updated in file");
-  
+        fileLogger->info("data updated in file");
+        fileLogger->flush();
+
+        consoleLogger->info("data updated in file");
     }
     else
     {
-       
-            fileLogger->error("INVALID DATA");
-            fileLogger->flush();
-       
-            consoleLogger->error("INVALID DATA");
-  
+
+        fileLogger->error("INVALID DATA");
+        fileLogger->flush();
+
+        consoleLogger->error("INVALID DATA");
     }
 }
 //}
