@@ -1,2 +1,9 @@
 build/
-*.json
+BENCHMARKING
+!benchmarking.cpp
+!CMakeLists.txt
+benchmark
+.vscode
+files/answers.json
+files/logFile.txt
+files/queryfile.json
