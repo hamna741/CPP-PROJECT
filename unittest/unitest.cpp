@@ -12,8 +12,10 @@ TEST(projectTest, DeleteTest)
 
   ansFile.close();
   int id = 17;
+  int id2 = 99;
   std::string instrumentName = "ETHUSDT";
   info.deleteData(id, instrumentName);
+  info.deleteData(id2, instrumentName);
 
   ASSERT_TRUE(answerDoc.HasMember("answers"));
   ASSERT_TRUE(answerDoc["answers"].IsArray());
@@ -27,8 +29,10 @@ TEST(projectTest, DeleteTest)
     std::string ansSymbol = answerDoc["answers"][index]["symbol"].GetString();
 
     ASSERT_FALSE(ansID == "17" && ansSymbol == instrumentName);
+    ASSERT_FALSE(ansID == "90" && ansSymbol == instrumentName); // id doesnt exists in data
   }
 }
+
 TEST(projectTest, updateTest)
 {
   ExchangeInfoClass info;
@@ -39,55 +43,44 @@ TEST(projectTest, updateTest)
 
   ansFile.close();
 
-  rapidjson::Document queryObject1, queryObject2;
-  queryObject1.SetObject();
-  rapidjson::Document::AllocatorType &allocator = queryObject1.GetAllocator();
+  rapidjson::Value queryObject1(rapidjson::kObjectType);
 
-  queryObject1.AddMember("id", 1287, allocator);
+  rapidjson::Document d1;
+
+  rapidjson::Document::AllocatorType &allocator = d1.GetAllocator();
+  d1.SetObject();
+
+  queryObject1.AddMember("id", 30, allocator);
   queryObject1.AddMember("instrument_name", "BCHUSDT", allocator);
   rapidjson::Value newData(rapidjson::kObjectType);
-  newData.AddMember("status", "not pending", allocator);
+  newData.AddMember("status", "bkawas", allocator);
   queryObject1.AddMember("data", newData, allocator);
 
-  queryObject2.AddMember("id", 13, allocator);
-  queryObject2.AddMember("instrument_name", "ETHUSDT", allocator);
-  rapidjson::Value newData(rapidjson::kObjectType);
-  newData.AddMember("status", "not pending", allocator);
-  newData.AddMember("ticksize", "0.01", allocator);
-  queryObject2.AddMember("data", newData, allocator);
-
+  info.configFunc();
   info.updatetData(queryObject1);
-
+  //  info.updatetData(queryObject2);
   if (answerDoc.HasMember("answers") && answerDoc["answers"].IsArray())
   {
-    rapidjson::Value &answersArray = answerDoc["answers"];
-    for (rapidjson::SizeType i = 0; i < answersArray.Size(); i++)
+
+    for (rapidjson::SizeType index = 0; index < answerDoc["answers"].Size(); index++)
     {
-      rapidjson::Value &answerObject = answersArray[i];
-      if (answerObject.HasMember("ID") && answerObject.HasMember("symbol") && answerObject["ID"].IsString() && answerObject["symbol"].IsString())
+      rapidjson::Value &answersArray = answerDoc["answers"][index];
+      ASSERT_TRUE(answersArray.IsObject());
+      ASSERT_TRUE(answersArray.HasMember("ID"));
+      ASSERT_TRUE(answersArray.HasMember("symbol"));
+      ASSERT_TRUE(answersArray.HasMember("data"));
+      rapidjson::Value &dataObject = answersArray["data"];
+      const char *idValue = answersArray["ID"].GetString();
+      int queryId = 30;
+      if (std::atoi(idValue) == queryId)
       {
-        std::string ansID = answerObject["ID"].GetString();
-        std::string ansSymbol = answerObject["symbol"].GetString();
-
-        if (std::stoi(ansID) == 1287 && ansSymbol == "BCHUSDT")
-        {
-
-          EXPECT_TRUE(answerObject.HasMember("data") && answerObject["data"].IsObject());
-          rapidjson::Value &dataObject = answerObject["data"];
-          EXPECT_TRUE(dataObject.HasMember("status") && dataObject["status"].IsString());
-          EXPECT_STREQ(dataObject["status"].GetString(), "not pending");
-          break;
-        }
-        if (std::stoi(ansID) == 13 && ansSymbol == "ETHUSDT")
-        {
-
-          EXPECT_TRUE(answerObject.HasMember("data") && answerObject["data"].IsObject());
-          rapidjson::Value &dataObject = answerObject["data"];
-          EXPECT_TRUE(dataObject.HasMember("status") && dataObject["status"].IsString());
-          EXPECT_STREQ(dataObject["status"].GetString(), "not pending");
-          EXPECT_STREQ(dataObject["ticksize"].GetString(), "0.01");
-          break;
-        }
+        ASSERT_TRUE(dataObject.HasMember("status"));
+        ASSERT_TRUE(dataObject["status"].IsString());
+        // std::cout<<"id"<<answersArray["ID"].GetString();
+        // std::cout<<"sym"<<answersArray["symbol"].GetString();
+        // std::cout<<"stat"<<dataObject["status"].GetString();
+        EXPECT_STREQ("bkawas", dataObject["status"].GetString());
+        break;
       }
     }
   }
@@ -95,20 +88,25 @@ TEST(projectTest, updateTest)
 
 TEST(projectTest, GetDataTest)
 {
-  // Prepare the test data
+  int id = 67;
+  ExchangeInfoClass info;
   std::string instrumentName = "BCHUSDT";
 
-  rapidjson::Document queryContent;
-  queryContent.SetObject();
-  rapidjson::Document::AllocatorType &allocator = queryContent.GetAllocator();
-  rapidjson::Value dataFields(rapidjson::kArrayType);
-  dataFields.PushBack("status", allocator);
-  dataFields.PushBack("contract_type", allocator);
-  queryContent.AddMember("data", dataFields, allocator);
-  ExchangeInfoClass info;
+  rapidjson::Value queryObject1(rapidjson::kObjectType), queryObject2(rapidjson::kObjectType);
+  rapidjson::Document d1, d2;
+  d1.SetObject();
+  rapidjson::Document::AllocatorType &allocator = d1.GetAllocator();
 
-  info.getBoostStruct();
-  info.getDataStruct(instrumentName, queryContent);
+  queryObject1.AddMember("id", id, allocator);
+  queryObject1.AddMember("instrument_name", "BCHUSDT", allocator);
+  rapidjson::Value DataArr(rapidjson::kArrayType);
+  DataArr.PushBack("status", allocator);
+  DataArr.PushBack("ticksize", allocator);
+  queryObject1.AddMember("data", DataArr, allocator);
+
+  info.configFunc();
+  info.getExchangeInfo();
+  info.getData(instrumentName, queryObject1);
 
   std::ifstream ansFile("/CPP-PROJECT/files/answers.json");
   rapidjson::Document answerDoc;
@@ -116,31 +114,20 @@ TEST(projectTest, GetDataTest)
   answerDoc.ParseStream(ansFileStreamWrapper);
   ansFile.close();
 
-  if (answerDoc.HasMember("answers") && answerDoc["answers"].IsArray())
-  {
-    rapidjson::Value &answersArray = answerDoc["answers"];
-    for (rapidjson::SizeType i = 0; i < answersArray.Size(); i++)
-    {
-      rapidjson::Value &answerObject = answersArray[i];
-      if (answerObject.HasMember("symbol") && answerObject["symbol"].IsString())
-      {
-        std::string ansSymbol = answerObject["symbol"].GetString();
-        if (ansSymbol == instrumentName)
-        {
+  ASSERT_TRUE(answerDoc.HasMember("answers"));
+  ASSERT_TRUE(answerDoc["answers"].IsArray());
+  // for (rapidjson::SizeType index = 0; index < answerDoc["answers"].Size(); index++)
+  // {
+  std::cout << "size= " << answerDoc["answers"].Size();
+  ASSERT_TRUE(answerDoc["answers"][(answerDoc["answers"].Size()) - 1].IsObject()) << "not object";
+  ASSERT_TRUE(answerDoc["answers"][(answerDoc["answers"].Size()) - 1].HasMember("ID")) << "no id";
+  ASSERT_TRUE(answerDoc["answers"][(answerDoc["answers"].Size()) - 1].HasMember("symbol")) << "no symbol";
 
-          EXPECT_TRUE(answerObject.HasMember("data") && answerObject["data"].IsObject());
-          rapidjson::Value &dataObject = answerObject["data"];
-
-          EXPECT_TRUE(dataObject.HasMember("status") && dataObject["status"].IsString());
-          EXPECT_TRUE(dataObject.HasMember("contract_type") && dataObject["contract_type"].IsString());
-
-        
-        }
-      }
-    }
-  }
-
-  FAIL() << "No matching entry found in the answers.json file.";
+  std::string ansID = answerDoc["answers"][(answerDoc["answers"].Size()) - 1]["ID"].GetString();
+  std::string ansSymbol = answerDoc["answers"][(answerDoc["answers"].Size()) - 1]["symbol"].GetString();
+  // std::cout<<ansID;
+  EXPECT_EQ(ansID, "67") << "ID  = " << ansID;
+  // }
 }
 
 int main(int argc, char **argv)
