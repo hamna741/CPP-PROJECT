@@ -1,0 +1,10 @@
+{
+    "logging": {
+        "level": "trace",
+        "file": true,
+        "console": true
+    },
+    "exchange_info_url": "fapi.binance.com/fapi/v1/exchangeInfo",
+    "request_interval": 60
+ }
+
