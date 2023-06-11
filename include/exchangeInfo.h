@@ -23,6 +23,7 @@
 // #include <boost/asio/ssl.hpp>
 
 using boost::asio::ip::tcp;
+//namespace binance{
 class ExchangeInfoClass
 {
 private:
@@ -59,16 +60,14 @@ public:
     std::string getStepSize();
   
     int configFunc();
-    // void getExchangeInfo();
     void readQueryFile();
     void queryCheck(const rapidjson::Value &queryContent);
     void deleteData(int id, std::string instrumentName);
-    // void getData(const std::string &instrumentName);
     void updatetData(const rapidjson::Value &queryObject);
-    // void getBoostExchangeInfo();
-    void getBoostStruct();
-    void getDataStruct(const std::string &instrumentName, const rapidjson::Value &queryContent);
+    void getExchangeInfo();
+    void getData(const std::string &instrumentName, const rapidjson::Value &queryContent);
 
 };
+//}
 
 #endif // EXCHANGE_INFO_H
