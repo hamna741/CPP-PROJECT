@@ -584,34 +584,40 @@ void ExchangeInfoClass::deleteData(int id, std::string instrumentName)
 
         while (index < answersArray.Size())
         {
-            if (answersArray[index].IsObject())
+            try
             {
-                const rapidjson::Value &answerObject = answersArray[index];
-
-                if (answerObject.HasMember("ID") && answerObject["ID"].IsString() && answerObject.HasMember("symbol") && answerObject["symbol"].IsString())
+                if (answersArray[index].IsObject())
                 {
+                    const rapidjson::Value &answerObject = answersArray[index];
 
-                    std::string ansID = answerObject["ID"].GetString();
-                    std::string ansSymbol = answerObject["symbol"].GetString();
-
-                    if (std::stoi(ansID) == id && ansSymbol == instrumentName)
+                    if (answerObject.HasMember("ID") && answerObject["ID"].IsString() && answerObject.HasMember("symbol") && answerObject["symbol"].IsString())
                     {
 
-                        consoleLogger->debug("deleting data");
+                        std::string ansID = answerObject["ID"].GetString();
+                        std::string ansSymbol = answerObject["symbol"].GetString();
 
-                        answersArray.Erase(answersArray.Begin() + index);
-                    }
-                    else
-                    {
+                        if (std::stoi(ansID) == id && ansSymbol == instrumentName)
+                        {
 
-                        index++;
+                            consoleLogger->debug("deleting data");
+
+                            answersArray.Erase(answersArray.Begin() + index);
+                        }
+                        else
+                        {
+
+                            index++;
+                        }
                     }
                 }
+                else
+                {
+                    throw std::runtime_error("INVALID ENTRY IN answer.json FILE");
+                }
             }
-            else
+            catch (std::exception &e)
             {
-
-                index++;
+                std::cout << "Caught exception: " << e.what() << "\n";
             }
         }
     }
@@ -697,10 +703,10 @@ void ExchangeInfoClass::updatetData(const rapidjson::Value &queryObject)
 
                                 for (auto it = newData.MemberBegin(); it != newData.MemberEnd(); ++it)
                                 {
-                                    
-                                    if (dataObject.HasMember( it->name.GetString()))
+
+                                    if (dataObject.HasMember(it->name.GetString()))
                                     {
-                                        dataObject[ it->name.GetString()].CopyFrom(it->value, answerDoc.GetAllocator());
+                                        dataObject[it->name.GetString()].CopyFrom(it->value, answerDoc.GetAllocator());
                                     }
                                 }
                             }
