@@ -1,35 +1,32 @@
 
 #include "exchangeInfo.h"
 
+// binance::
 ExchangeInfoClass info;
 void reloadData(int interval)
 {
     while (true)
     {
-        info.getBoostStruct();
+        info.getExchangeInfo();
         std::this_thread::sleep_for(std::chrono::seconds(interval));
     }
 }
 void readQuery()
 {
-   
-        info.readQueryFile();
-       
+
+    info.readQueryFile();
 }
-int main()
+int main(int argc, char *argv[])
 {
 
-
     int interval = info.configFunc();
-  
-      std::thread reloadThread(reloadData,interval);///////////////////
 
-sleep(interval+5);                 //////////////////////
+    std::thread reloadThread(reloadData, interval); ///////////////////
 
-std::thread queryThread(readQuery);/////////////////
-       queryThread.join();////////////////
+    sleep(interval + 5); //////////////////////
 
-
+    std::thread queryThread(readQuery); /////////////////
+    queryThread.join();                 ////////////////
 
     return 0;
 }
